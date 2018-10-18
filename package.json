@@ -1,0 +1,43 @@
+{
+  "name": "basic-car-game",
+  "version": "1.0.0",
+  "description": "Simple multiplayer online car game made as a tutorial",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --progress --colors",
+    "dev": "nodemon server/index.js --exec babel-node",
+    "start": "nodemon server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gdomaradzki/simple-car-game.git"
+  },
+  "keywords": [
+    "Node.js",
+    "Socket.io",
+    "Phaser.js"
+  ],
+  "author": "Gustavo Domaradzki",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gdomaradzki/simple-car-game/issues"
+  },
+  "homepage": "https://github.com/gdomaradzki/simple-car-game#readme",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
+    "html-webpack-plugin": "^2.30.1",
+    "uglifyjs-webpack-plugin": "^1.1.6",
+    "webpack": "^3.10.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "express": "^4.16.2",
+    "socket.io": "^2.0.4",
+    "nodemon": "^1.14.10"
+  }
+}
