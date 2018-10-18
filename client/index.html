@@ -9,8 +9,17 @@
         position: relative;
       }
 
+      #overlay {
+        position:absolute;
+        left:0;
+        right:0;
+        top:0;
+        bottom:0;
+      }
+
       #main {
         margin:0 auto;
+        margin-top:20px;
         width:100%;
         max-width:200px;
         box-sizing:border-box;
@@ -39,12 +48,14 @@
     <script src="../vendor/phaser.min.js"></script>
     <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script>
 
-    <div id="main">
-      <button>Create Game</button>
-      <hr/>
-      <input type="text" class="joinInput" placeholder="room code"/>
-      <input type="text" class="joinInput" placeholder="username" />
-      <button>Join Game</button>
+    <div id="overlay">
+      <div id="main">
+        <button id="createRoomBtn">Create Game</button>
+        <hr/>
+        <input type="text" class="joinInput" placeholder="room code"/>
+        <input type="text" class="joinInput" placeholder="username" />
+        <button id="joinRoomBtn">Join Game</button>
+      </div>
     </div>
   </body>
 </html>

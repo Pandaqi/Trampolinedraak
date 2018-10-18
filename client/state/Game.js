@@ -32,9 +32,6 @@ class Game extends Phaser.State {
 
     // Update all players
     updatePlayers(socket, otherPlayers, this.game)
-
-    // Scale game to fit the entire window
-    this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL
   }
 
   update () {
