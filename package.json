@@ -1,7 +1,7 @@
 {
-  "name": "basic-car-game",
+  "name": "trampolinedraak",
   "version": "1.0.0",
-  "description": "Simple multiplayer online car game made as a tutorial",
+  "description": "Trying to recreate Jackbox Games",
   "main": "index.js",
   "scripts": {
     "build": "webpack --progress --colors",
@@ -17,7 +17,7 @@
     "Socket.io",
     "Phaser.js"
   ],
-  "author": "Gustavo Domaradzki",
+  "author": "Tiamo Pastoor",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/gdomaradzki/simple-car-game/issues"

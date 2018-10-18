@@ -2,16 +2,49 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Simple Online Car Game</title>
+    <title>Trampolinedraak</title>
     <style>
       body, html {
         margin: 0;
         position: relative;
       }
+
+      #main {
+        margin:0 auto;
+        width:100%;
+        max-width:200px;
+        box-sizing:border-box;
+        padding:4px;
+        background-color:#AAA;
+      }
+
+      button {
+        width:100%;
+      }
+
+      .joinInput {
+        width:100%;
+        padding:0px;
+        padding-top:2px;
+        padding-bottom:2px;
+        padding-left:2px;
+        box-sizing:border-box;
+        border:0px;
+        margin-top:4px;
+        margin-bottom:4px;
+      }
     </style>
   </head>
   <body>
     <script src="../vendor/phaser.min.js"></script>
-    <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script>
+    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script>
+
+    <div id="main">
+      <button>Create Game</button>
+      <hr/>
+      <input type="text" class="joinInput" placeholder="room code"/>
+      <input type="text" class="joinInput" placeholder="username" />
+      <button>Join Game</button>
+    </div>
   <script type="text/javascript" src="index.js"></script></body>
 </html>
