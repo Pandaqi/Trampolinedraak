@@ -41,12 +41,15 @@
         border:0px;
         margin-top:4px;
         margin-bottom:4px;
+
+        text-transform:uppercase;
       }
     </style>
   </head>
   <body>
     <script src="../vendor/phaser.min.js"></script>
-    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script>
+    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script> 
+    <!-- <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script> -->
 
     <div id="overlay">
       <div id="main">
@@ -55,6 +58,9 @@
         <input type="text" class="joinInput" placeholder="room code"/>
         <input type="text" class="joinInput" placeholder="username" />
         <button id="joinRoomBtn">Join Game</button>
+        </hr/>
+        <input type="text" class="joinInput" placeholder="room code"/>
+        <button id="watchRoomBtn">Watch Room</button>
       </div>
     </div>
   </body>

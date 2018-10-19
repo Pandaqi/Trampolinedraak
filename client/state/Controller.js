@@ -1,3 +1,5 @@
+import { serverInfo } from './sockets/serverInfo'
+
 class Controller extends Phaser.State {
   constructor () {
     super()
@@ -8,10 +10,11 @@ class Controller extends Phaser.State {
     // load stuff here, if needed
   }
 
-  create () {
-    // Connects the player to the server
-    socket = io(SERVER_IP)
-    
+  create () {    
+    let gm = this.game
+    var style = { font: "bold 16px Arial", fill: "#fff"};
+    var text = gm.add.text(gm.width*0.5, 20, "You've joined the game!", style);
+
     console.log("Controller state");
   }
 
