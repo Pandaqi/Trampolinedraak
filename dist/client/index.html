@@ -17,14 +17,21 @@
         bottom:0;
       }
 
-      #main {
+      #main, #main-controller {
         margin:0 auto;
-        margin-top:20px;
         width:100%;
-        max-width:200px;
+        max-width:300px;
         box-sizing:border-box;
         padding:4px;
         background-color:#AAA;
+      }
+
+      #main {
+        margin-top:20px;
+      }
+
+      #canvas-container {
+        margin:0 auto;
       }
 
       button {
@@ -44,23 +51,41 @@
 
         text-transform:uppercase;
       }
+
+      #err-message {
+        color: red;
+      }
+
+      canvas {
+        margin:0 auto;
+      }
     </style>
   </head>
   <body>
-    <script src="../vendor/phaser.min.js"></script>
-    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script> 
+    <script src="../vendor/phaser.min.js"></script>-
+    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script>
     <!-- <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script> -->
 
+    <!-- The game canvas will be a child of this node -->
+    <div id="canvas-container">
+    </div>
+
     <div id="overlay">
+      <!-- This node contains the GUI overlay (for joining/creating/watching rooms) -->
       <div id="main">
+        <span id="err-message"></span>
         <button id="createRoomBtn">Create Game</button>
         <hr/>
         <input type="text" class="joinInput" placeholder="room code"/>
         <input type="text" class="joinInput" placeholder="username" />
         <button id="joinRoomBtn">Join Game</button>
-        </hr/>
+        <hr/>
         <input type="text" class="joinInput" placeholder="room code"/>
         <button id="watchRoomBtn">Watch Room</button>
+      </div>
+
+      <!-- This node is used for the controller overlay -->
+      <div id="main-controller">
       </div>
     </div>
   <script type="text/javascript" src="index.js"></script></body>

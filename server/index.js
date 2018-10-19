@@ -51,36 +51,66 @@ io.on('connection', socket => {
   socket.on('join-room', state => {
     // get roomcode requested, turn into all uppercase (just to be sure)
     let code = state.roomCode.toUpperCase()
+    let name = state.userName
+    let curRoom = rooms[code]
 
     // check if the room exists and is joinable
-    let success = false
-    if(rooms[code] != undefined && !rooms[code].gameStarted) {
-      success = true
+    // also check if the name provided is not empty, too long, or already in use
+    let success = true
+    let err = ''
+
+    if(curRoom == undefined || curRoom.gameStarted) {
+      err = 'This room is not available or already started'
+      success = false
+    } else {
+      let nameInUse = Object.keys(curRoom.players).some(function(k) {
+          return curRoom.players[k].name === name;
+      });
+
+      if(name.length == 0) {
+        err = 'Please enter a name!'
+        success = false
+      } else if(name.length >= 12) {
+        err = 'Name must be under 12 characters'
+        success = false
+      } else if(nameInUse) {
+        err = 'This name is already in use'
+        success = false
+      }
     }
 
     console.log("Room join requested at room " + code + " || Success: " + success.toString())
 
     // if joining was succesful ...
     //  => add the player
-    //  => send an update to all other players
+    //  => check if it's the first player (if so => make it the VIP)
+    //  => send an update to all other players (in the same room, of course)
+    let vip = false
     if(success) {
       socket.join(code)
-      let playerObject =  { name: state.userName }
-      rooms[code].players[socket.id] = playerObject
 
-      io.in(code).emit('new-player-joined', playerObject)
+      if(curRoom.players.length < 1) {
+        vip = true
+      }
+
+      let playerObject =  { name: name, vip: vip, profile: null }
+      curRoom.players[socket.id] = playerObject
+
+      io.in(code).emit('update-playerlist', curRoom.players)
     }
 
-    socket.emit('join-response', { success: success })
+    socket.emit('join-response', { success: success, vip: vip, err: err })
   })
 
   // When a room WATCH is requested
   socket.on('watch-room', state => {
     let code = state.roomCode.toUpperCase()
 
-    let success = false
-    if(rooms[code] != undefined /* && !rooms[code].gameStarted */) {
-      success = true
+    let success = true
+    let err = ''
+    if(rooms[code] == undefined /* && !rooms[code].gameStarted */) {
+      err = 'This room is not available'
+      success = false
     }
 
     console.log("Room watch requested at room " + code + " || Success: " + success.toString())
@@ -92,10 +122,10 @@ io.on('connection', socket => {
       socket.join(code)
     }
 
-    socket.emit('watch-response', { success: success })
+    socket.emit('watch-response', { success: success, err: err })
   })
 
-  // When any client disconnects
+  // When any client disconnects ...
   socket.on('disconnect', state => {
     if(players[socket.id] == undefined) {
       // if the disconnect was from a MONITOR, no probs
@@ -106,7 +136,39 @@ io.on('connection', socket => {
       // NOTE: It sends the updated playerlist, so people need to figure out (clientside) who is gone and what to do with it
       delete players[socket.id]
       io.emit('player-disconnected', players)
+
+      // TO DO: If it's the last player, delete the whole room
     }
+  })
+
+  // When the VIP has decided to start the game ...
+  socket.on('start-game', state => {
+    // TO DO: Perform code to actually start the game (like, distribute player roles, setup variables, etc.)
+    let roomCode = state.roomCode
+    rooms[roomCode].gameStarted = true
+
+    // Inform all players about this change (which should switch them to the next state)
+
+  })
+
+  // When someone submits a drawing ...
+  // TO DO: This assumes the user is only in a single room. (It automatically picks element 0.)
+  // If this changes later, REMEMBER TO CHANGE THIS
+  socket.on('submit-drawing', state => {
+    let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+
+    console.log('Received drawing in room ' + room);
+
+    if(state.type == "profile") {
+      // save the drawing as profile picture (for this player)
+      rooms[room].players[socket.id].profile = state.dataURI
+
+      // update the waiting screen
+      io.in(room).emit('update-playerlist', rooms[room].players)
+    }
+    
   })
 
 

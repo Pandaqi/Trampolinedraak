@@ -11,11 +11,8 @@ class Controller extends Phaser.State {
   }
 
   create () {    
-    let gm = this.game
-    var style = { font: "bold 16px Arial", fill: "#fff"};
-    var text = gm.add.text(gm.width*0.5, 20, "You've joined the game!", style);
-
-    console.log("Controller state");
+    
+    console.log("Controller state")
   }
 
   update () {

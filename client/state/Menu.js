@@ -8,6 +8,7 @@ class Menu extends Phaser.State {
 
   preload () {
     // load stuff here, if needed
+    this.game.stage.backgroundColor = "#EEEEEE";
   }
 
   create () {
@@ -16,13 +17,18 @@ class Menu extends Phaser.State {
 
     let gm = this.game;
 
+    //gm.scale.scaleMode = Phaser.ScaleManager.RESIZE;
+    //gm.scale.parentIsWindow = true;
+
     // Scale game to fit the entire window
+    /*
     gm.scale.scaleMode = Phaser.ScaleManager.RESIZE
     gm.scale.setShowAll();
     window.addEventListener('resize', function () {  
       gm.scale.refresh();
     });
     gm.scale.refresh();
+    */
 
     //import SimpleGame from './index'
     //not necessary anymore because I placed the functions here; we can just use this.game
@@ -47,10 +53,10 @@ class Menu extends Phaser.State {
         serverInfo.roomCode = data.roomCode
 
         // remove the overlay
-        document.getElementById("overlay").remove();
+        document.getElementById("main").style.display = 'none';
 
         // Starts the "game" state
-        gm.state.start('Game');
+        gm.state.start('GameWaiting');
       })
 
       
@@ -85,11 +91,15 @@ class Menu extends Phaser.State {
       socket.on('join-response', data => {
         if(data.success) {
           // remove overlay
-          document.getElementById("overlay").remove();
+          document.getElementById("main").style.display = 'none';
+
+          serverInfo.vip = true;
+          serverInfo.roomCode = roomCode;
 
           // Starts the "controller" state
-          gm.state.start('Controller');
+          gm.state.start('ControllerWaiting');
         } else {
+          document.getElementById("err-message").innerHTML = data.err
           btn.disabled = false;
           socket.disconnect(true);
         }
@@ -127,9 +137,11 @@ class Menu extends Phaser.State {
           // remove overlay
           document.getElementById("overlay").remove();
 
-          // Starts the "controller" state
+          // Starts the "monitor" state
           gm.state.start('Game');
         } else {
+          document.getElementById("err-message").innerHTML = data.err
+
           btn.disabled = false;
           socket.disconnect(true);
         }
