@@ -70,22 +70,16 @@ class GameWaiting extends Phaser.State {
       //var graphics = gm.add.graphics(0, 0);
       //graphics.beginFill(0xFF0000, 1);
       //graphics.drawCircle(randPos[0], randPos[1], 100);
+    })
 
-      
+    socket.on('game-started', data => {
+      gm.state.start('Game')
     })
 
     console.log("Game waiting state")
-
-
-    // Sends a new-player event to the server
-    //newPlayer(socket, this.player)
-
-    // Update all players
-    //updatePlayers(socket, otherPlayers, this.game)
   }
 
   loadImageComplete(gm, lst, x, y, name) {
-    console.log("IMAGE LOAD COMPLETE")
     let newSprite = gm.add.sprite(x, y, name)
     newSprite.width = 60
     newSprite.height = 78

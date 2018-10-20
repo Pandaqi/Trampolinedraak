@@ -12,7 +12,7 @@ class ControllerWaiting extends Phaser.State {
 
   create () {    
     let gm = this.game
-     let socket = serverInfo.socket
+    let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
     /* Show succesful join
@@ -38,7 +38,7 @@ class ControllerWaiting extends Phaser.State {
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);
-    this.bmd.ctx.strokeStyle = 'rgb( 77, 77, 77)';      
+    this.bmd.ctx.strokeStyle = 'rgb( 77, 77, 77)'; // THIS is the actual drawing color      
     this.bmd.ctx.lineWidth   = 10;     
     this.bmd.ctx.lineCap     = 'round';      
     this.bmd.ctx.fillStyle = '#ff0000';      
@@ -62,10 +62,13 @@ class ControllerWaiting extends Phaser.State {
 
       // Disable canvas
       document.getElementById('canvas-container').style.display = 'none';
+
+      if(!serverInfo.vip) {
+        p3.innerHTML = 'Waiting for game to start ...';
+      }
+
     })
     div.appendChild(btn2)
-
-
 
     // display VIP message
     // and start button
@@ -84,6 +87,10 @@ class ControllerWaiting extends Phaser.State {
       })
       div.appendChild(btn1)
     }
+
+    socket.on('game-started', data => {
+      gm.state.start('Controller')
+    })
 
     console.log("Controller Waiting state");
   }

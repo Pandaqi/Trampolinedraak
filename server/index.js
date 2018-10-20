@@ -7,7 +7,6 @@ const io = require('socket.io')(Server)
 
 Server.listen(PORT, () => console.log('Game server running on:', PORT))
 
-const players = {}
 const rooms = {}
 
 
@@ -93,7 +92,7 @@ io.on('connection', socket => {
         vip = true
       }
 
-      let playerObject =  { name: name, vip: vip, profile: null }
+      let playerObject =  { name: name, vip: vip, profile: null, room: code }
       curRoom.players[socket.id] = playerObject
 
       io.in(code).emit('update-playerlist', curRoom.players)
@@ -127,17 +126,26 @@ io.on('connection', socket => {
 
   // When any client disconnects ...
   socket.on('disconnect', state => {
-    if(players[socket.id] == undefined) {
+    let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+
+    if(rooms[room].players[socket.id] == undefined) {
       // if the disconnect was from a MONITOR, no probs
       // The game is still going strong, one just needs to "view room" again.
     } else {
       // If the disconnect is from a player, VERY MUCH PROBLEMOS
-      // For now, just delete the player and notify everyone
-      // NOTE: It sends the updated playerlist, so people need to figure out (clientside) who is gone and what to do with it
+      // Delete the player
       delete players[socket.id]
-      io.emit('player-disconnected', players)
 
-      // TO DO: If it's the last player, delete the whole room
+      // If it was the last player, delete the whole room
+      if(Object.keys(rooms[room].players).length < 1) {
+        delete rooms[room]
+      } else {
+        // Inform everyone of the change
+        // NOTE: It sends the updated playerlist, so people need to figure out (clientside) who is gone and what to do with it
+        io.in(room).emit('player-disconnected', players)
+      }
     }
   })
 
@@ -148,7 +156,7 @@ io.on('connection', socket => {
     rooms[roomCode].gameStarted = true
 
     // Inform all players about this change (which should switch them to the next state)
-
+    io.in(room).emit('game-started', {})
   })
 
   // When someone submits a drawing ...
@@ -169,46 +177,5 @@ io.on('connection', socket => {
       io.in(room).emit('update-playerlist', rooms[room].players)
     }
     
-  })
-
-
-  // OLD CODE:
-
-
-
-  // When a player connects
-  socket.on('new-player', state => {
-    console.log('New player joined with state:', state)
-    players[socket.id] = state
-    // Emit the update-players method in the client side
-    io.emit('update-players', players)
-  })
-
-  // When a player moves
-  socket.on('move-player', data => {
-    const { x, y, angle, playerName, speed } = data
-
-    // If the player is invalid, return
-    if (players[socket.id] === undefined) {
-      return
-    }
-
-    // Update the player's data if he moved
-    players[socket.id].x = x
-    players[socket.id].y = y
-    players[socket.id].angle = angle
-    players[socket.id].playerName = {
-      name: playerName.name,
-      x: playerName.x,
-      y: playerName.y
-    }
-    players[socket.id].speed = {
-      value: speed.value,
-      x: speed.x,
-      y: speed.y
-    }
-
-    // Send the data back to the client
-    io.emit('update-players', players)
   })
 })
