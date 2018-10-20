@@ -93,7 +93,7 @@ class Menu extends Phaser.State {
           // remove overlay
           document.getElementById("main").style.display = 'none';
 
-          serverInfo.vip = true;
+          serverInfo.vip = data.vip;
           serverInfo.roomCode = roomCode;
 
           // Starts the "controller" state

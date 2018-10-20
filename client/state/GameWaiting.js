@@ -23,7 +23,9 @@ class GameWaiting extends Phaser.State {
   }
 
   create () {
-    let colors = ['#c8ad55', '#d0fcb3', '#9bc59d', '#6c5a49', '#271f30', '#392f5a', '#f092dd', '#eb9486', '#7e7f9a', '#97a7b3', '#f3de8a']
+    let colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
+    '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
+    '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
     // display room code
     let gm = this.game
@@ -46,19 +48,29 @@ class GameWaiting extends Phaser.State {
       // make a new list
       let counter = 0
       for(var key in ths.playerlist) {
-        style = { font: "bold 24px Arial", fill: colors[counter]};
-        let newItem = gm.add.text(gm.width*0.5, 80 + counter*30, data[key].name, style);
+        style = { font: "bold 32px Arial", fill: colors[counter]};
+        let x = gm.width*0.5
+        let y = 80 + counter*60
+        let newItem = gm.add.text(x, y, data[key].name, style);
         ths.listSprites.push(newItem)
 
         if(data[key].profile != null) {
           let dataURI = data[key].profile
           let imageName = 'profileImage' + data[key].name // creates unique name by appending the username
 
-          // load the image; display once loaded
-          var loader = new Phaser.Loader(gm); 
-          loader.image(imageName, dataURI+'');
-          loader.onLoadComplete.addOnce(this.loadImageComplete, this, 0, gm, ths.listSprites, (gm.width*0.5 - 100), (80 + counter*30), imageName);
-          loader.start();
+          let doesKeyExist = gm.cache.checkKey(Phaser.Cache.IMAGE, imageName)
+
+          if(!doesKeyExist) {
+            // load the image; display once loaded
+            var loader = new Phaser.Loader(gm); 
+            loader.image(imageName, dataURI+'');
+            loader.onLoadComplete.addOnce(this.loadImageComplete, this, 0, gm, ths.listSprites, (x - 100), y - 30, imageName);
+            loader.start();
+          } else {
+            // if image was already in cache, just add the sprite (but don't load it again)
+            this.loadImageComplete(gm, ths.listSprites, (x - 100), (y - 30), imageName)
+          }
+
         }
 
 

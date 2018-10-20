@@ -1,6 +1,6 @@
 {
   "name": "trampolinedraak",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Trying to recreate Jackbox Games",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gdomaradzki/simple-car-game.git"
+    "url": "git+https://github.com/Pandaqi/Trampolinedraak.git"
   },
   "keywords": [
     "Node.js",
@@ -20,9 +20,9 @@
   "author": "Tiamo Pastoor",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/gdomaradzki/simple-car-game/issues"
+    "url": "https://github.com/Pandaqi/Trampolinedraak/issues"
   },
-  "homepage": "https://github.com/gdomaradzki/simple-car-game#readme",
+  "homepage": "https://github.com/Pandaqi/Trampolinedraak#readme",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",

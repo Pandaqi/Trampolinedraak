@@ -3,7 +3,7 @@ const http = require('http')
 const app = require('./config')
 const Server = http.Server(app)
 const PORT = process.env.PORT || 8000
-const io = require('socket.io')(Server)
+const io = require('socket.io')(Server, {origins: "*:*"})
 
 Server.listen(PORT, () => console.log('Game server running on:', PORT))
 
@@ -33,7 +33,7 @@ io.on('connection', socket => {
     rooms[id] = { 
       id: id, 
       players: {},
-      gameStarted: false 
+      gameStarted: false, 
     }
 
     // join the room (room is "automatically created" when someone joins it)
@@ -88,7 +88,7 @@ io.on('connection', socket => {
     if(success) {
       socket.join(code)
 
-      if(curRoom.players.length < 1) {
+      if(Object.keys(curRoom.players).length < 1) {
         vip = true
       }
 
@@ -130,6 +130,11 @@ io.on('connection', socket => {
         return item !== socket.id;
     })[0]
 
+    // the player wasn't in a room yet; no need for further checks
+    if(room == undefined || room == null) {
+      return;
+    }
+
     if(rooms[room].players[socket.id] == undefined) {
       // if the disconnect was from a MONITOR, no probs
       // The game is still going strong, one just needs to "view room" again.
@@ -161,7 +166,7 @@ io.on('connection', socket => {
 
   // When someone submits a drawing ...
   // TO DO: This assumes the user is only in a single room. (It automatically picks element 0.)
-  // If this changes later, REMEMBER TO CHANGE THIS
+  // If this changes later, REMEMBER TO CHANGE THIS (and all other places we use this)
   socket.on('submit-drawing', state => {
     let room = Object.keys(socket.rooms).filter(function(item) {
         return item !== socket.id;
