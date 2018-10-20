@@ -7,6 +7,7 @@
       body, html {
         margin: 0;
         position: relative;
+        background-color:#ebf2fa;
       }
 
       #overlay {
@@ -20,10 +21,10 @@
       #main, #main-controller {
         margin:0 auto;
         width:100%;
-        max-width:300px;
+        max-width:375px;
         box-sizing:border-box;
         padding:4px;
-        background-color:#AAA;
+        //background-color: #427aa1; //#064789; //#679436; //#a5be00;
       }
 
       #main {
@@ -36,19 +37,36 @@
 
       button {
         width:100%;
+        padding:8px;
+        background-color:#457214;
+        color:#d8ef88;
+        border:0px;
+         
+        margin-top:4px;
+        margin-bottom:0px;
+        border-radius:3px;
+      }
+
+      button:hover {
+        background-color:#235002;
+        color:#fcffcc;
+        cursor:pointer; 
+      }
+
+      hr {
+        margin-top:20px;
+        margin-bottom:1px;
+        border:1px solid #AAA;
       }
 
       .joinInput {
         width:100%;
         padding:0px;
-        padding-top:2px;
-        padding-bottom:2px;
-        padding-left:2px;
+        padding:8px;
         box-sizing:border-box;
         border:0px;
         margin-top:4px;
-        margin-bottom:4px;
-
+        border-radius:3px;
         text-transform:uppercase;
       }
 
@@ -62,9 +80,9 @@
     </style>
   </head>
   <body>
-    <script src="../vendor/phaser.min.js"></script>-
-    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script>
-    <!-- <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script> -->
+    <script src="../vendor/phaser.min.js"></script>
+    <!-- <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script> -->
+    <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script>
 
     <!-- The game canvas will be a child of this node -->
     <div id="canvas-container">

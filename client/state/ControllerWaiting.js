@@ -15,10 +15,55 @@ class ControllerWaiting extends Phaser.State {
      let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
-    // Show succesful join
+    /* Show succesful join
     let p1 = document.createElement("p")
     p1.innerHTML = "You've joined the game!"
     div.appendChild(p1)
+    */
+
+    // ask user to draw their own profile pic
+    let p3 = document.createElement("p")
+    p3.innerHTML = "Draw yourself a profile pic!"
+    div.appendChild(p3)
+
+    // move canvas inside GUI
+    let canvas = document.getElementById("canvas-container")
+    div.appendChild(canvas)
+
+    // make canvas the correct size
+    let desiredWidth = document.getElementById('main-controller').clientWidth
+    console.log(desiredWidth)
+    let desiredHeight = desiredWidth * 1.3
+    gm.scale.setGameSize(desiredWidth, desiredHeight)
+
+    // add a bitmap for drawing
+    this.bmd = gm.add.bitmapData(gm.width, gm.height);
+    this.bmd.ctx.strokeStyle = 'rgb( 77, 77, 77)';      
+    this.bmd.ctx.lineWidth   = 10;     
+    this.bmd.ctx.lineCap     = 'round';      
+    this.bmd.ctx.fillStyle = '#ff0000';      
+    this.sprite = gm.add.sprite(0, 0, this.bmd); 
+    this.bmd.isDragging = false;
+    this.bmd.lastPoint = null;
+    //this.bmd.smoothed = false;
+    let bmdReference = this.bmd
+
+    // display button to submit drawing
+    let btn2 = document.createElement("button")
+    btn2.innerHTML = 'Submit drawing'
+    btn2.addEventListener('click', function(event) {
+      let dataURI = bmdReference.canvas.toDataURL()
+
+      // send the drawing to the server (including the information that it's a profile pic)
+      socket.emit('submit-drawing', { dataURI: dataURI, type: "profile"})
+
+      // Remove submit button
+      btn2.remove();
+
+      // Disable canvas
+      document.getElementById('canvas-container').style.display = 'none';
+    })
+    div.appendChild(btn2)
 
 
 
@@ -40,51 +85,6 @@ class ControllerWaiting extends Phaser.State {
       div.appendChild(btn1)
     }
 
-    // ask user to draw their own profile pic
-    let p3 = document.createElement("p")
-    p3.innerHTML = "If you want, draw yourself a nice profile pic"
-    div.appendChild(p3)
-
-    // move canvas inside GUI
-    let canvas = document.getElementById("canvas-container")
-    document.getElementById('overlay').appendChild(canvas)
-
-    // make canvas the correct size
-    let desiredWidth = document.getElementById('main-controller').clientWidth
-    console.log(desiredWidth)
-    let desiredHeight = desiredWidth * 1.75
-    gm.scale.setGameSize(desiredWidth, desiredHeight)
-
-    // add a bitmap for drawing
-    this.bmd = gm.add.bitmapData(gm.width, gm.height);
-    this.bmd.ctx.strokeStyle = 'rgb( 77, 77, 77)';      
-    this.bmd.ctx.lineWidth   = 10;     
-    this.bmd.ctx.lineCap     = 'round';      
-    this.bmd.ctx.fillStyle = '#ff0000';      
-    this.sprite = gm.add.sprite(0, 0, this.bmd); 
-    this.bmd.isDragging = false;
-    this.bmd.lastPoint = null;
-    let bmdReference = this.bmd
-
-    //bmd.smoothed = false;
-    //gm.input.addMoveCallback(paint, this);
-
-    
-
-    // display button to submit drawing
-    let btn2 = document.createElement("button")
-    btn2.innerHTML = 'Submit drawing'
-    btn2.addEventListener('click', function(event) {
-      let dataURI = bmdReference.canvas.toDataURL()
-      //console.log(dataURI)
-      // send the drawing to the server (including the information that it's a profile pic)
-      socket.emit('submit-drawing', { dataURI: dataURI, type: "profile"})
-
-      // TO DO: Remove drawing tools. (We can leave them for now, resubmission isn't bad.)
-      btn2.disabled = true
-    })
-    div.appendChild(btn2)
-
     console.log("Controller Waiting state");
   }
 
@@ -94,12 +94,12 @@ class ControllerWaiting extends Phaser.State {
     /***
      * DRAW STUFF
      ***/
-    if(this.game.input.mousePointer.isUp) {        
+    if(this.game.input.activePointer.isUp) {        
       this.bmd.isDragging = false;        
       this.bmd.lastPoint = null;      
     }      
 
-    if (this.game.input.mousePointer.isDown) {        
+    if (this.game.input.activePointer.isDown) {        
       console.log('down');        
       this.bmd.isDragging = true;        
       this.bmd.ctx.beginPath();                        
