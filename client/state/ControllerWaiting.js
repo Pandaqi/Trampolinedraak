@@ -89,6 +89,7 @@ class ControllerWaiting extends Phaser.State {
     }
 
     socket.on('game-started', data => {
+      document.getElementById('main-controller').innerHTML = '';
       gm.state.start('Controller')
     })
 

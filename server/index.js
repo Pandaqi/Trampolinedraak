@@ -33,7 +33,8 @@ io.on('connection', socket => {
     rooms[id] = { 
       id: id, 
       players: {},
-      gameStarted: false, 
+      gameStarted: false,
+      suggestions: [] 
     }
 
     // join the room (room is "automatically created" when someone joins it)
@@ -157,8 +158,8 @@ io.on('connection', socket => {
   // When the VIP has decided to start the game ...
   socket.on('start-game', state => {
     // TO DO: Perform code to actually start the game (like, distribute player roles, setup variables, etc.)
-    let roomCode = state.roomCode
-    rooms[roomCode].gameStarted = true
+    let room = state.roomCode;
+    rooms[room].gameStarted = true;
 
     // Inform all players about this change (which should switch them to the next state)
     io.in(room).emit('game-started', {})
@@ -182,5 +183,15 @@ io.on('connection', socket => {
       io.in(room).emit('update-playerlist', rooms[room].players)
     }
     
+  })
+
+  // When someone submits a suggestion ...
+  socket.on('submit-suggestion', state => {
+    // add it to the list of suggestions
+    let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+
+    rooms[room].suggestions.push(state.suggestion)
   })
 })

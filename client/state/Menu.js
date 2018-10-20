@@ -7,7 +7,9 @@ class Menu extends Phaser.State {
   }
 
   preload () {
-    // load stuff here, if needed
+    // load stuff here
+    //game.load.baseURL = 'https://trampolinedraak.herokuapp.com/';
+    this.game.load.crossOrigin = 'Anonymous'
     this.game.stage.backgroundColor = "#EEEEEE";
   }
 
