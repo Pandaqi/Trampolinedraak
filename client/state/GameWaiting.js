@@ -52,7 +52,7 @@ class GameWaiting extends Phaser.State {
 
         if(data[key].profile != null) {
           let dataURI = data[key].profile
-          let imageName = 'profileImage' + data[key].name // creates unique name by appending the username
+          let imageName = 'tempImage' + data[key].name // creates unique name by appending the username
 
           // load the image; display once loaded
           var loader = new Phaser.Loader(gm); 
@@ -87,8 +87,8 @@ class GameWaiting extends Phaser.State {
   loadImageComplete(gm, lst, x, y, name) {
     console.log("IMAGE LOAD COMPLETE")
     let newSprite = gm.add.sprite(x, y, name)
-    newSprite.width = 60
-    newSprite.height = 78
+    newSprite.width = 20
+    newSprite.height = 38
     lst.push(newSprite)
   }
 
