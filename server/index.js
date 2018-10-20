@@ -50,7 +50,7 @@ io.on('connection', socket => {
   // when a room JOIN is requested ...
   socket.on('join-room', state => {
     // get roomcode requested, turn into all uppercase (just to be sure)
-    let code = state.roomCode.toUpperCase()
+    let code = state.roomCode
     let name = state.userName
     let curRoom = rooms[code]
 
@@ -159,6 +159,11 @@ io.on('connection', socket => {
   socket.on('start-game', state => {
     // TO DO: Perform code to actually start the game (like, distribute player roles, setup variables, etc.)
     let room = state.roomCode;
+    if(rooms[room] == undefined) {
+      console.log("Error: Tried to start game in undefined room")
+      return;
+    }
+
     rooms[room].gameStarted = true;
 
     // Inform all players about this change (which should switch them to the next state)

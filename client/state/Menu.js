@@ -73,8 +73,8 @@ class Menu extends Phaser.State {
       // fetches the inputs (which will be handed to the server on first connection)
       // to join the correct room
       let inputs = document.getElementsByClassName("joinInput");
-      let roomCode = inputs[0].value;
-      let userName = inputs[1].value;
+      let roomCode = inputs[0].value.toUpperCase();
+      let userName = inputs[1].value.toUpperCase();
       console.log(roomCode + " || " + userName);
 
       // Connects the player to the server
@@ -120,7 +120,7 @@ class Menu extends Phaser.State {
 
       // fetches the inputs (which will be handed to the server on first connection)
       // to join the correct room
-      let roomCode = document.getElementsByClassName("joinInput")[2].value;
+      let roomCode = document.getElementsByClassName("joinInput")[2].value.toUpperCase();
 
       // Connects the player to the server
       serverInfo.socket = io(serverInfo.SERVER_IP)
