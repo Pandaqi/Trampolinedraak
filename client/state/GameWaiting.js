@@ -30,7 +30,8 @@ class GameWaiting extends Phaser.State {
     // display room code
     let gm = this.game
     var style = { font: "bold 32px Arial", fill: "#333"};
-    var text = gm.add.text(gm.width*0.5, 20, serverInfo.roomCode, style);
+    var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, style);
+    text.anchor.setTo(0.5, 0)
 
     let socket = serverInfo.socket
 
@@ -73,7 +74,6 @@ class GameWaiting extends Phaser.State {
 
         }
 
-
         counter++
       }
 
@@ -85,7 +85,7 @@ class GameWaiting extends Phaser.State {
     })
 
     socket.on('game-started', data => {
-      gm.state.start('Game')
+      gm.state.start('GameSuggestions')
     })
 
     console.log("Game waiting state")

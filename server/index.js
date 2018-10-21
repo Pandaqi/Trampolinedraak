@@ -34,7 +34,7 @@ io.on('connection', socket => {
       id: id, 
       players: {},
       gameStarted: false,
-      suggestions: [] 
+      suggestions: { nouns: [], verbs: [], adjectives: [], adverbs: [] } 
     }
 
     // join the room (room is "automatically created" when someone joins it)
@@ -186,6 +186,11 @@ io.on('connection', socket => {
 
       // update the waiting screen
       io.in(room).emit('update-playerlist', rooms[room].players)
+    } else if (state.type == "ingame") {
+      // save the drawing for this player
+      rooms[room].players[socket.id].drawing = state.dataURI
+
+      // notify the game monitors (... how? Send a message containing the player ID and its image? Or send the complete playerlist?)
     }
     
   })
@@ -197,6 +202,63 @@ io.on('connection', socket => {
         return item !== socket.id;
     })[0]
 
-    rooms[room].suggestions.push(state.suggestion)
+    console.log('Received suggestion "' + state.suggestion + '" in room ' + room)
+
+    let r = rooms[room].suggestions
+    let s = state.suggestion
+
+    // suggestions are split based on word type; this allows us to construct meaningful and correct (random) combinations later on
+    r.nouns.push(s[0])
+    r.verbs.push(s[1])
+    r.adjectives.push(s[2])
+    r.adverbs.push(s[3])
+
+    // if everyone has submitted suggestions, start the game immediately!
+    let allSuggestionsDone = (r.nouns.length == Object.keys(rooms[room].players).length)
+    if(allSuggestionsDone) {
+      gotoNextState(room, 'Drawing');
+    }
   })
+
+  socket.on('timer-complete', state => {
+    let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+
+    let nextState = state.nextState
+
+    gotoNextState(room, nextState)
+  })
+
+  function gotoNextState(room, nextState) {
+    switch(nextState) {
+      // If the next state is the drawing state ...
+      case 'Drawing':
+        // create a random suggestion for each player
+        // and send it to them
+        let r = rooms[room].suggestions
+
+        for(let player in rooms[room].players) {
+          // generate a random suggestion
+          let title = r.adjectives[Math.floor(Math.random()*r.adjectives.length)] + " " + r.nouns[Math.floor(Math.random()*r.nouns.length)];
+
+          if(Math.random() >= 0.5) {
+            title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
+
+            if(Math.random() >= 0.5) {
+              title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+            }
+          }
+
+          // save it
+          rooms[room].players[player].drawingTitle = title
+
+          // send it (the player variable holds the key for this player in the dictionary, which is set to its socketid when created)
+          // so it all works out beautifully in the end!
+          io.to(player).emit('drawing-title', { title: title })
+        }
+    }
+
+    io.in(room).emit('next-state', { nextState: nextState })
+  }
 })

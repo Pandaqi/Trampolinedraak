@@ -1,6 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
 
-class ControllerWaiting extends Phaser.State {
+class ControllerDrawing extends Phaser.State {
   constructor () {
     super()
     // construct stuff here, if needed
@@ -15,24 +15,20 @@ class ControllerWaiting extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
-    /* Show succesful join
+
     let p1 = document.createElement("p")
-    p1.innerHTML = "You've joined the game!"
+    p1.innerHTML = 'Draw this: <span class="titleSuggestion">' + serverInfo.drawingTitle + '</span>'
     div.appendChild(p1)
-    */
 
-    // ask user to draw their own profile pic
-    let p3 = document.createElement("p")
-    p3.innerHTML = "Draw yourself a profile pic!"
-    div.appendChild(p3)
+    
 
-    // move canvas inside GUI
+    // move canvas inside GUI (and bring it back to life from display=none)
     let canvas = document.getElementById("canvas-container")
+    canvas.style.display = 'block';
     div.appendChild(canvas)
 
     // make canvas the correct size
     let desiredWidth = document.getElementById('main-controller').clientWidth
-    console.log(desiredWidth)
     let desiredHeight = desiredWidth * 1.3
     gm.scale.setGameSize(desiredWidth, desiredHeight)
 
@@ -49,56 +45,31 @@ class ControllerWaiting extends Phaser.State {
     let bmdReference = this.bmd
 
     // display button to submit drawing
-    let btn2 = document.createElement("button")
-    btn2.innerHTML = 'Submit drawing'
-    btn2.addEventListener('click', function(event) {
+    let btn1 = document.createElement("button")
+    btn1.innerHTML = 'Submit drawing'
+    btn1.addEventListener('click', function(event) {
       let dataURI = bmdReference.canvas.toDataURL()
 
       // send the drawing to the server (including the information that it's a profile pic)
-      socket.emit('submit-drawing', { dataURI: dataURI, type: "profile"})
+      socket.emit('submit-drawing', { dataURI: dataURI, type: "ingame"})
 
       // Remove submit button
-      btn2.remove();
+      btn1.remove();
 
       // Disable canvas
-      canvas.style.display = 'none';
+      document.getElementById('canvas-container').style.display = 'none';
 
-      if(!serverInfo.vip) {
-        p3.innerHTML = 'Waiting for game to start ...';
-      }
-
+      p1.innerHTML = "That drawing is ... let's say, something special.";
     })
-    div.appendChild(btn2)
+    div.appendChild(btn1)
 
-    // display VIP message
-    // and start button
-    if(serverInfo.vip) {
-      let p2 = document.createElement("p")
-      p2.innerHTML = "You are VIP. Start the game when you're ready."
-      div.appendChild(p2)
-
-      let btn1 = document.createElement("button")
-      btn1.innerHTML = 'START GAME'
-      btn1.addEventListener('click', function(event) {
-        if(btn1.disabled) { return; }
-
-        btn1.disabled = true;
-
-        // send message to server that we want to start
-        socket.emit('start-game', { roomCode: serverInfo.roomCode })
-        
-        // we don't need to go to the next state; that happens automatically when the server responds with "okay! we start!"
-      })
-      div.appendChild(btn1)
-    }
-
-    socket.on('game-started', data => {
+    socket.on('next-state', data => {
       document.body.appendChild(canvas)
-      div.innerHTML = '';
-      gm.state.start('ControllerSuggestions')
+      document.getElementById('main-controller').innerHTML = '';
+      gm.state.start('ControllerGuessing')
     })
 
-    console.log("Controller Waiting state");
+    console.log("Controller Drawing state");
   }
 
   update () {
@@ -128,7 +99,20 @@ class ControllerWaiting extends Phaser.State {
     
       this.bmd.dirty = true;
     }
+
+    // Perform countdown, if we're VIP
+    if(serverInfo.vip) {
+      if(this.timer > 0) {
+        this.timer -= this.game.time.elapsed/1000;
+      } else {
+        // TIMER IS DONE!
+        // Send message to the server that the next phase should start
+        // TO DO: Create the other Controller states, uncomment emit below
+        let socket = serverInfo.socket
+        //socket.emit('timer-complete', { nextState: 'Guessing' })
+      }
+    }
   }
 }
 
-export default ControllerWaiting
+export default ControllerDrawing

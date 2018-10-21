@@ -6,6 +6,8 @@
     <style>
       body, html {
         margin: 0;
+        width:100%;
+        height:100%;
         position: relative;
         background-color:#ebf2fa;
       }
@@ -33,6 +35,8 @@
 
       #canvas-container {
         margin:0 auto;
+        width:100%;
+        height:100%;
       }
 
       button {
@@ -74,15 +78,22 @@
         color: red;
       }
 
+      .titleSuggestion {
+        color: #457214;
+      }
+
       canvas {
         margin:0 auto;
       }
     </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <script src="../vendor/phaser.min.js"></script>
-    <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script>
-    <!-- <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script> -->
+    <!-- <script src="../vendor/phaser.min.js"></script> -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser-ce/2.11.1/phaser.js"></script> 
+    
+    <!-- <script src="https://trampolinedraak.herokuapp.com/socket.io/socket.io.js"></script> -->
+    <script src="https://simple-car-game.herokuapp.com/socket.io/socket.io.js"></script>
 
     <!-- The game canvas will be a child of this node -->
     <div id="canvas-container">

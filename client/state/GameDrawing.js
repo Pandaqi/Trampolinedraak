@@ -1,6 +1,14 @@
 import { serverInfo } from './sockets/serverInfo'
 
-class Game extends Phaser.State {
+/**
+ * GAME DRAWING
+ * 
+ * In this state, all players get a suggestion (on their Controller device) which they must draw
+ * A timer runs down; once finished, the phase ends. (The phase also ends immediately when all drawings have been submitted)
+ * Whenever a user submitted their drawing, that is made known on this screen.
+ */
+
+class GameDrawing extends Phaser.State {
   constructor () {
     super()
   }
@@ -14,13 +22,13 @@ class Game extends Phaser.State {
     let socket = serverInfo.socket
 
     let style = { font: "bold 32px Arial", fill: "#333"};
-    let newItem = gm.add.text(gm.width*0.5, 20, "Please submit as many suggestions as you can!", style);
+    let newItem = gm.add.text(gm.width*0.5, 20, "Draw the suggestion shown on your screen!", style);
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
 
     this.timer = 15;
 
-    console.log("Game state")
+    console.log("Game Drawing state")
   }
 
   update () {
@@ -33,4 +41,4 @@ class Game extends Phaser.State {
   }
 }
 
-export default Game
+export default GameDrawing

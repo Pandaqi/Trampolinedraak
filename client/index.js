@@ -1,19 +1,42 @@
 import { WINDOW_WIDTH, WINDOW_HEIGHT } from './config'
 
 import Menu from './state/Menu' // menu is the waiting menu, where players either create or join a room
-import Game from './state/Game' // game merely *displays* the game on the monitor
-import Controller from './state/Controller' // controller means the handheld device a player uses
-import GameWaiting from './state/GameWaiting'
-import ControllerWaiting from './state/ControllerWaiting'
+
+import GameWaiting from './state/GameWaiting' // game merely *displays* the game on the monitor
+import GameSuggestions from './state/GameSuggestions' 
+import GameDrawing from './state/GameDrawing'
+import GameGuessing from './state/GameGuessing'
+import GameGuessingPick from './state/GameGuessingPick'
+import GameGuessingResults from './state/GameGuessingResults'
+import GameOver from './state/GameOver'     
+
+import ControllerWaiting from './state/ControllerWaiting' // controller means the handheld device a player uses
+import ControllerSuggestions from './state/ControllerSuggestions' 
+import ControllerDrawing from './state/ControllerDrawing'
+
+
 
 class App extends Phaser.Game {
   constructor () {
     super('100%', '100%', Phaser.AUTO, 'canvas-container')
+    // menu state
     this.state.add('Menu', Menu)
+ 
+    // game monitor states
     this.state.add('GameWaiting', GameWaiting)
+    this.state.add('GameSuggestions', GameSuggestions)
+    this.state.add('GameDrawing', GameDrawing)
+    this.state.add('GameGuessing', GameGuessing)
+    this.state.add('GameGuessingPick', GameGuessingPick)
+    this.state.add('GameGuessingResults', GameGuessingResults)
+    this.state.add('GameOver', GameOver)
+
+    // game controller states
     this.state.add('ControllerWaiting', ControllerWaiting)
-    this.state.add('Game', Game)
-    this.state.add('Controller', Controller)
+    this.state.add('ControllerSuggestions', ControllerSuggestions)
+    this.state.add('ControllerDrawing', ControllerDrawing)
+    
+    // start the game! (at the menu)
     this.state.start('Menu')
   }
 }
