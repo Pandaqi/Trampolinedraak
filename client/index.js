@@ -13,7 +13,10 @@ import GameOver from './state/GameOver'
 import ControllerWaiting from './state/ControllerWaiting' // controller means the handheld device a player uses
 import ControllerSuggestions from './state/ControllerSuggestions' 
 import ControllerDrawing from './state/ControllerDrawing'
-
+import ControllerGuessing from './state/ControllerGuessing'
+import ControllerGuessingPick from './state/ControllerGuessingPick'
+import ControllerGuessingResults from './state/ControllerGuessingResults'
+import ControllerOver from './state/ControllerOver'
 
 
 class App extends Phaser.Game {
@@ -35,6 +38,10 @@ class App extends Phaser.Game {
     this.state.add('ControllerWaiting', ControllerWaiting)
     this.state.add('ControllerSuggestions', ControllerSuggestions)
     this.state.add('ControllerDrawing', ControllerDrawing)
+    this.state.add('ControllerGuessing', ControllerGuessing)
+    this.state.add('ControllerGuessingPick', ControllerGuessingPick)
+    this.state.add('ControllerGuessingResults', ControllerGuessingResults)
+    this.state.add('ControllerOver', ControllerOver)
     
     // start the game! (at the menu)
     this.state.start('Menu')

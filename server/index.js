@@ -34,7 +34,8 @@ io.on('connection', socket => {
       id: id, 
       players: {},
       gameStarted: false,
-      suggestions: { nouns: [], verbs: [], adjectives: [], adverbs: [] } 
+      suggestions: { nouns: [], verbs: [], adjectives: [], adverbs: [] },
+      drawingsSubmitted: 0,
     }
 
     // join the room (room is "automatically created" when someone joins it)
@@ -190,7 +191,17 @@ io.on('connection', socket => {
       // save the drawing for this player
       rooms[room].players[socket.id].drawing = state.dataURI
 
-      // notify the game monitors (... how? Send a message containing the player ID and its image? Or send the complete playerlist?)
+      // notify the game monitors
+      io.in(room).emit('player-done', { player: rooms[room].players[socket.id] })
+
+      // update drawings counter
+      rooms[room].drawingsSubmitted++;
+
+      // If all drawings have been submitted, start the next state automatically
+      // This can be because all users have submitted, OR because the autofetch by the server is complete
+      if(rooms[room].drawingsSubmitted == Object.keys(rooms[room].players).length) {
+        gotoNextState(room, 'Guessing', true)
+      }
     }
     
   })
@@ -216,7 +227,7 @@ io.on('connection', socket => {
     // if everyone has submitted suggestions, start the game immediately!
     let allSuggestionsDone = (r.nouns.length == Object.keys(rooms[room].players).length)
     if(allSuggestionsDone) {
-      gotoNextState(room, 'Drawing');
+      gotoNextState(room, 'Drawing', true);
     }
   })
 
@@ -226,11 +237,13 @@ io.on('connection', socket => {
     })[0]
 
     let nextState = state.nextState
-
-    gotoNextState(room, nextState)
+    gotoNextState(room, nextState, false)
   })
 
-  function gotoNextState(room, nextState) {
+  // room: the current room to move to the next state
+  // nextState: which state to move to
+  // certain: whether all data has already been collected (or the computer still needs to do an autofetch)
+  function gotoNextState(room, nextState, certain) {
     switch(nextState) {
       // If the next state is the drawing state ...
       case 'Drawing':
@@ -242,10 +255,10 @@ io.on('connection', socket => {
           // generate a random suggestion
           let title = r.adjectives[Math.floor(Math.random()*r.adjectives.length)] + " " + r.nouns[Math.floor(Math.random()*r.nouns.length)];
 
-          if(Math.random() >= 0.5) {
+          if(Math.random() >= 0.25) {
             title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
 
-            if(Math.random() >= 0.5) {
+            if(Math.random() >= 0.25) {
               title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
             }
           }
@@ -257,8 +270,26 @@ io.on('connection', socket => {
           // so it all works out beautifully in the end!
           io.to(player).emit('drawing-title', { title: title })
         }
+
+      // If the next state is the guessing state ...
+      case 'Guessing':
+        if(!certain) {
+          // Ping all users to make sure you collect their drawings
+          io.in(room).emit('fetch-drawing', {})
+
+          // In the submit-drawing signal, it already checks if all drawings have been submitted, and starts the next state
+          // This time, after the autofetch, it IS certain
+        } else {
+          // TO DO:
+          // shuffle the players to get a player order (an array with their socket ids)
+          // this order is used to cycle through all drawings (Guessing -> Guessing Pick -> Guessing Results)
+          // then, send the first drawing to the game monitors
+        }
+
     }
 
-    io.in(room).emit('next-state', { nextState: nextState })
+    if(certain) {
+      io.in(room).emit('next-state', { nextState: nextState })
+    }
   }
 })

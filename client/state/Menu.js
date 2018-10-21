@@ -26,16 +26,6 @@ class Menu extends Phaser.State {
     //gm.scale.scaleMode = Phaser.ScaleManager.RESIZE;
     //gm.scale.parentIsWindow = true;
 
-    // Scale game to fit the entire window
-    /*
-    gm.scale.scaleMode = Phaser.ScaleManager.RESIZE
-    gm.scale.setShowAll();
-    window.addEventListener('resize', function () {  
-      gm.scale.refresh();
-    });
-    gm.scale.refresh();
-    */
-
     //import SimpleGame from './index'
     //not necessary anymore because I placed the functions here; we can just use this.game
 

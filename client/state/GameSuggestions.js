@@ -21,7 +21,7 @@ class GameSuggestions extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let style = { font: "bold 32px Arial", fill: "#333"};
+    let style = { font: "bold 32px Arial", fill: "#333", wordWrap:true, wordWrapWidth: gm.width*0.8 };
     let text = gm.add.text(gm.width*0.5, 20, "Please submit as many suggestions as you can!", style);
     text.anchor.setTo(0.5, 0)
 

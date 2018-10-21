@@ -27,8 +27,16 @@ class GameWaiting extends Phaser.State {
     '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
     '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
-    // display room code
     let gm = this.game
+
+    // Scale game to fit the entire window (and rescale when window is resized)
+    gm.scale.scaleMode = Phaser.ScaleManager.RESIZE
+    window.addEventListener('resize', function () {  
+      gm.scale.refresh();
+    });
+    gm.scale.refresh();
+
+    // display room code
     var style = { font: "bold 32px Arial", fill: "#333"};
     var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, style);
     text.anchor.setTo(0.5, 0)

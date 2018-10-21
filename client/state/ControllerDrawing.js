@@ -15,12 +15,11 @@ class ControllerDrawing extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
+    let drawingSubmitted = false;
 
     let p1 = document.createElement("p")
     p1.innerHTML = 'Draw this: <span class="titleSuggestion">' + serverInfo.drawingTitle + '</span>'
     div.appendChild(p1)
-
-    
 
     // move canvas inside GUI (and bring it back to life from display=none)
     let canvas = document.getElementById("canvas-container")
@@ -57,13 +56,27 @@ class ControllerDrawing extends Phaser.State {
       btn1.remove();
 
       // Disable canvas
-      document.getElementById('canvas-container').style.display = 'none';
+      canvas.style.display = 'none';
 
       p1.innerHTML = "That drawing is ... let's say, something special.";
+
+      drawingSubmitted = true;
     })
     div.appendChild(btn1)
 
+    // just to be sure, the computer auto-fetches all unsubmitted drawings
+    socket.on('fetch-drawing', data => {
+      // if we already submitted: no need to waste internet bandwidth
+      if(drawingSubmitted) { return; }
+
+      // if not, send it!
+      let dataURI = bmdReference.canvas.toDataURL()
+      socket.emit('submit-drawing', { dataURI: dataURI, type: "ingame"})
+    })
+
+    // when next state is called, clean the GUI, move the canvas somewhere save, and start the next state
     socket.on('next-state', data => {
+      canvas.style.display = 'none';
       document.body.appendChild(canvas)
       document.getElementById('main-controller').innerHTML = '';
       gm.state.start('ControllerGuessing')
@@ -109,7 +122,7 @@ class ControllerDrawing extends Phaser.State {
         // Send message to the server that the next phase should start
         // TO DO: Create the other Controller states, uncomment emit below
         let socket = serverInfo.socket
-        //socket.emit('timer-complete', { nextState: 'Guessing' })
+        socket.emit('timer-complete', { nextState: 'Guessing' })
       }
     }
   }

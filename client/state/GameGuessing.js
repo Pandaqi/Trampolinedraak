@@ -25,6 +25,8 @@ class GameGuessing extends Phaser.State {
     let newItem = gm.add.text(gm.width*0.5, 20, "What do you think this drawing represents?", style);
     newItem.anchor.setTo(0.5, 0)
 
+    // TO DO: Load the drawing given to us (from the previous state; should be in serverInfo.currentDrawing or something)
+
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
 
     this.timer = 15;
