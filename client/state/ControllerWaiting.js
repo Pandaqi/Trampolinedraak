@@ -92,7 +92,8 @@ class ControllerWaiting extends Phaser.State {
       div.appendChild(btn1)
     }
 
-    socket.on('game-started', data => {
+    socket.on('next-state', data => {
+      serverInfo.timer = data.timer
       document.body.appendChild(canvas)
       div.innerHTML = '';
       gm.state.start('ControllerSuggestions')

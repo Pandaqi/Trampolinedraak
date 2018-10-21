@@ -67,14 +67,14 @@ class ControllerSuggestions extends Phaser.State {
     div.appendChild(btn1)
 
     // how much time we have for the current phase
-    // TO DO: Distribute this value from the server, to make sure it's all synced!
-    this.timer = 15
+    this.timer = serverInfo.timer
 
     socket.on('drawing-title', data => {
       serverInfo.drawingTitle = data.title
     })
 
     socket.on('next-state', data => {
+      serverInfo.timer = data.timer
       div.innerHTML = ''
       gm.state.start('Controller' + data.nextState)
     })

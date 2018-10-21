@@ -26,13 +26,13 @@ class GameSuggestions extends Phaser.State {
     text.anchor.setTo(0.5, 0)
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
-
-    this.timer = 15;
+    this.timer = serverInfo.timer
 
     console.log("Game Suggestions state")
 
     socket.on('next-state', data => {
-    	gm.state.start('Game' + data.nextState)
+      serverInfo.timer = data.timer
+    	gm.state.start('GameDrawing')
     })
   }
 

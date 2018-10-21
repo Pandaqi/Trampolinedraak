@@ -40,7 +40,10 @@ class ControllerGuessing extends Phaser.State {
     })
     div.appendChild(btn1)
 
+    this.timer = serverInfo.timer
+
     socket.on('next-state', data => {
+      serverInfo.timer = data.timer
       document.getElementById('main-controller').innerHTML = '';
       gm.state.start('ControllerGuessingPick')
     })
@@ -56,7 +59,7 @@ class ControllerGuessing extends Phaser.State {
       } else {
         // TIMER IS DONE!
         // Send message to the server that the next phase should start
-        // TO DO: Create the other Controller states, uncomment emit below
+        // TO DO: Create the next state, uncomment emit below
         let socket = serverInfo.socket
         //socket.emit('timer-complete', { nextState: 'Guessing' })
       }

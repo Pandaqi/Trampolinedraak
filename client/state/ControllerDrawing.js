@@ -74,8 +74,11 @@ class ControllerDrawing extends Phaser.State {
       socket.emit('submit-drawing', { dataURI: dataURI, type: "ingame"})
     })
 
-    // when next state is called, clean the GUI, move the canvas somewhere save, and start the next state
+    this.timer = serverInfo.timer;
+
+    // when next state is called, clean the GUI, move the canvas somewhere safe, and start the next state
     socket.on('next-state', data => {
+      serverInfo.timer = data.timer;
       canvas.style.display = 'none';
       document.body.appendChild(canvas)
       document.getElementById('main-controller').innerHTML = '';
@@ -120,7 +123,6 @@ class ControllerDrawing extends Phaser.State {
       } else {
         // TIMER IS DONE!
         // Send message to the server that the next phase should start
-        // TO DO: Create the other Controller states, uncomment emit below
         let socket = serverInfo.socket
         socket.emit('timer-complete', { nextState: 'Guessing' })
       }

@@ -6,4 +6,5 @@ export const serverInfo = {
   server: null,
   roomCode: '',
   vip: false,
+  timer: 0,
 }

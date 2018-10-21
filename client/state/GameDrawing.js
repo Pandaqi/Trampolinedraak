@@ -29,14 +29,18 @@ class GameDrawing extends Phaser.State {
     text.anchor.setTo(0.5, 0)
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
-
-    this.timer = 15;
+    this.timer = serverInfo.timer
 
     // if a player is done -> show it by loading the player name + profile onscreen
     let playersDoneCounter = 0
     socket.on('player-done', data => {
       this.loadPlayerVisuals(gm, gm.width*0.5, 80 + playersDoneCounter*60, colors[playersDoneCounter], data)
       playersDoneCounter++;
+    })
+
+    socket.on('next-state', data => {
+      serverInfo.timer = data.timer
+      gm.state.start('GameGuessing')
     })
 
     console.log("Game Drawing state")

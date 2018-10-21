@@ -92,7 +92,8 @@ class GameWaiting extends Phaser.State {
       //graphics.drawCircle(randPos[0], randPos[1], 100);
     })
 
-    socket.on('game-started', data => {
+    socket.on('next-state', data => {
+      serverInfo.timer = data.timer
       gm.state.start('GameSuggestions')
     })
 
