@@ -207,6 +207,7 @@ io.on('connection', socket => {
       rooms[room].players[socket.id].drawing = state.dataURI
 
       // notify the game monitors
+      // (only send the player that is done, not the whole playerlist)
       io.in(room).emit('player-done', { player: rooms[room].players[socket.id] })
 
       // update drawings counter
@@ -405,7 +406,8 @@ io.on('connection', socket => {
         }
 
         // throw them back (to both monitor and controller)
-        io.in(room).emit('return-guesses', { guesses: guesses })
+        // to save internet (and computational power), just send the array immediately
+        io.in(room).emit('return-guesses', guesses)
 
         timer = 60;
         break;

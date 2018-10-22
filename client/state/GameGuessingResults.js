@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import dynamicLoadImage from './drawing/dynamicLoadImage'
 
 /**
  * GAME GUESSING RESULTS

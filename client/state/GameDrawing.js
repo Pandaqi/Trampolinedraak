@@ -1,6 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
-//import loadImageComplete from './drawing/loadImageComplete'
 
 /**
  * GAME DRAWING
@@ -63,11 +62,11 @@ class GameDrawing extends Phaser.State {
 
   loadPlayerVisuals(gm, x, y, color, data) {
     let style = { font: "bold 32px Arial", fill: color};
-    let newItem = gm.add.text(x, y, data[key].name, style);
+    let newItem = gm.add.text(x, y, data.name, style);
 
-    if(data[key].profile != null) {
-      let dataURI = data[key].profile
-      let imageName = 'profileImage' + data[key].name // creates unique name by appending the username
+    if(data.profile != null) {
+      let dataURI = data.profile
+      let imageName = 'profileImage' + data.name // creates unique name by appending the username
 
       dynamicLoadImage(gm, {x: (x - 100), y: (y - 30)}, { width:60, height:78 }, imageName, dataURI)
     }
