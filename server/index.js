@@ -289,7 +289,8 @@ io.on('connection', socket => {
     })[0]
 
     let nextState = state.nextState
-    gotoNextState(room, nextState, false)
+    let certain = state.certain || false
+    gotoNextState(room, nextState, certain)
   })
 
   // room: the current room to move to the next state
@@ -297,6 +298,8 @@ io.on('connection', socket => {
   // certain: whether all data has already been collected (or the computer still needs to do an autofetch)
   function gotoNextState(room, nextState, certain) {
     let timer = 0;
+    let curPlayerID = null;
+    let p = null;
     
     switch(nextState) {
       // If the next state is the suggestions state (first of the game) ...
@@ -366,8 +369,8 @@ io.on('connection', socket => {
           }
 
           // get current player
-          let curPlayerID = rooms[room].playerOrder[curPointer]
-          let p = rooms[room].players[curPlayerID]
+          curPlayerID = rooms[room].playerOrder[curPointer]
+          p = rooms[room].players[curPlayerID]
 
           // send the next drawing
           io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID, lastDrawing: lastDrawing })
@@ -386,8 +389,8 @@ io.on('connection', socket => {
 
         // add the correct title to this list
         // first get current player
-        let curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
-        let p = rooms[room].players[curPlayerID]
+        curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+        p = rooms[room].players[curPlayerID]
 
         // then push the guess (and the player ID)
         guesses.push({ guess: p.drawingTitle, player: curPlayerID, correct: true })
@@ -412,14 +415,15 @@ io.on('connection', socket => {
         // For every player that guesses the correct title of X's drawing, X gets 1000 points
         // But, if EVERYONE guesses correctly, X loses 2000 points
         
-        let curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+        curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+        
         let realTitle = rooms[room].players[curPlayerID].drawingTitle
         let countCorrect = 0;
         for(let key in rooms[room].players) {
           // the player who drew the picture already gets point from checking the other players
           // so exclude him from this loop
           if(key != curPlayerID) {
-            let p = rooms[room].players[key]
+            p = rooms[room].players[key]
             let myVote = p.guessVote
 
             // if the vote was correct ...
