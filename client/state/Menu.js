@@ -60,8 +60,8 @@ class Menu extends Phaser.State {
 
     // function for joining a room (from start GUI overlay)
     document.getElementById('joinRoomBtn').onclick = function() {
-      let btn = this;
       // disable the button
+      let btn = this;
       btn.disabled = true;
 
       // fetches the inputs (which will be handed to the server on first connection)
@@ -91,6 +91,7 @@ class Menu extends Phaser.State {
 
           serverInfo.vip = data.vip;
           serverInfo.roomCode = roomCode;
+          serverInfo.rank = data.rank;
 
           // Starts the "controller" state
           gm.state.start('ControllerWaiting');
@@ -108,8 +109,8 @@ class Menu extends Phaser.State {
     // Watching a room simply means showing the game state
     // An audience can watch on a separate screen, or you can use this to reconnect if you lost internet connection
     document.getElementById('watchRoomBtn').onclick = function() {
-      let btn = this;
       // disable the button
+      let btn = this;
       btn.disabled = true;
 
       // fetches the inputs (which will be handed to the server on first connection)

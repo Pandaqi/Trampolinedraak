@@ -13,14 +13,12 @@ class ControllerWaiting extends Phaser.State {
   create () {    
     let gm = this.game
     let socket = serverInfo.socket
+    let colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
+    '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
+    '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
     let div = document.getElementById("main-controller")
-    /* Show succesful join
-    let p1 = document.createElement("p")
-    p1.innerHTML = "You've joined the game!"
-    div.appendChild(p1)
-    */
-
+    
     // ask user to draw their own profile pic
     let p3 = document.createElement("p")
     p3.innerHTML = "Draw yourself a profile pic!"
@@ -38,7 +36,7 @@ class ControllerWaiting extends Phaser.State {
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);
-    this.bmd.ctx.strokeStyle = 'rgb( 77, 77, 77)'; // THIS is the actual drawing color      
+    this.bmd.ctx.strokeStyle = colors[serverInfo.rank]; // THIS is the actual drawing color      
     this.bmd.ctx.lineWidth   = 10;     
     this.bmd.ctx.lineCap     = 'round';      
     this.bmd.ctx.fillStyle = '#ff0000';      

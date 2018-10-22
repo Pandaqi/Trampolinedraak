@@ -42,8 +42,6 @@ class ControllerGuessingResults extends Phaser.State {
     // when next state is called, clean the GUI, move the canvas somewhere safe, and start the next state
     socket.on('next-state', data => {
       serverInfo.timer = data.timer;
-      canvas.style.display = 'none';
-      document.body.appendChild(canvas)
       document.getElementById('main-controller').innerHTML = '';
       gm.state.start('ControllerGuessing')
     })

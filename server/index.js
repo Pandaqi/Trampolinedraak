@@ -116,7 +116,7 @@ io.on('connection', socket => {
       io.in(code).emit('new-player', playerObject)
     }
 
-    socket.emit('join-response', { success: success, vip: vip, err: err })
+    socket.emit('join-response', { success: success, vip: vip, err: err, rank: rank })
   })
 
   // When a room WATCH is requested
@@ -240,6 +240,10 @@ io.on('connection', socket => {
     r.verbs.push(s[1])
     r.adjectives.push(s[2])
     r.adverbs.push(s[3])
+
+    // notify the game monitors
+    // (only send the player that is done, not the whole playerlist)
+    io.in(room).emit('player-done', rooms[room].players[socket.id])
 
     // if everyone has submitted suggestions, start the game immediately!
     let allSuggestionsDone = (r.nouns.length == rooms[room].playerCount)
@@ -370,7 +374,7 @@ io.on('connection', socket => {
           // check if this is the final round
           let curPointer = rooms[room].orderPointer
           let lastDrawing = false
-          if(curPointer == (Object.keys(rooms[room].players).length - 1)) {
+          if(curPointer == (rooms[room].playerCount - 1)) {
             lastDrawing = true
           }
 

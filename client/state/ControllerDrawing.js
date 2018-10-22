@@ -13,6 +13,9 @@ class ControllerDrawing extends Phaser.State {
   create () {    
     let gm = this.game
     let socket = serverInfo.socket
+    let colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
+    '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
+    '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
     let div = document.getElementById("main-controller")
     let drawingSubmitted = false;
@@ -33,7 +36,7 @@ class ControllerDrawing extends Phaser.State {
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);
-    this.bmd.ctx.strokeStyle = 'rgb( 77, 77, 77)'; // THIS is the actual drawing color      
+    this.bmd.ctx.strokeStyle = colors[serverInfo.rank]; // THIS is the actual drawing color      
     this.bmd.ctx.lineWidth   = 10;     
     this.bmd.ctx.lineCap     = 'round';      
     this.bmd.ctx.fillStyle = '#ff0000';      
@@ -47,13 +50,13 @@ class ControllerDrawing extends Phaser.State {
     let btn1 = document.createElement("button")
     btn1.innerHTML = 'Submit drawing'
     btn1.addEventListener('click', function(event) {
+      // Remove submit button
+      btn1.remove();
+
       let dataURI = bmdReference.canvas.toDataURL()
 
       // send the drawing to the server (including the information that it's a profile pic)
       socket.emit('submit-drawing', { dataURI: dataURI, type: "ingame"})
-
-      // Remove submit button
-      btn1.remove();
 
       // Disable canvas
       canvas.style.display = 'none';
@@ -72,6 +75,8 @@ class ControllerDrawing extends Phaser.State {
       // if not, send it!
       let dataURI = bmdReference.canvas.toDataURL()
       socket.emit('submit-drawing', { dataURI: dataURI, type: "ingame"})
+
+      socket.off('fetch-drawing')
     })
 
     this.timer = serverInfo.timer;
