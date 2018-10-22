@@ -36,6 +36,9 @@ io.on('connection', socket => {
       gameStarted: false,
       suggestions: { nouns: [], verbs: [], adjectives: [], adverbs: [] },
       drawingsSubmitted: 0,
+      playerOrder: [],
+      orderPointer: 0,
+      guesses: []
     }
 
     // join the room (room is "automatically created" when someone joins it)
@@ -90,14 +93,16 @@ io.on('connection', socket => {
     if(success) {
       socket.join(code)
 
-      if(Object.keys(curRoom.players).length < 1) {
+      let rank = Object.keys(curRoom.players).length
+
+      if(rank < 1) {
         vip = true
       }
 
-      let playerObject =  { name: name, vip: vip, profile: null, room: code }
+      let playerObject =  { name: name, vip: vip, rank: rank, profile: null, room: code }
       curRoom.players[socket.id] = playerObject
 
-      io.in(code).emit('update-playerlist', curRoom.players)
+      io.in(code).emit('new-player', playerObject)
     }
 
     socket.emit('join-response', { success: success, vip: vip, err: err })
@@ -186,7 +191,7 @@ io.on('connection', socket => {
       rooms[room].players[socket.id].profile = state.dataURI
 
       // update the waiting screen
-      io.in(room).emit('update-playerlist', rooms[room].players)
+      io.in(room).emit('player-updated-profile', rooms[room].players[socket.id])
     } else if (state.type == "ingame") {
       // save the drawing for this player
       rooms[room].players[socket.id].drawing = state.dataURI
@@ -228,6 +233,25 @@ io.on('connection', socket => {
     let allSuggestionsDone = (r.nouns.length == Object.keys(rooms[room].players).length)
     if(allSuggestionsDone) {
       gotoNextState(room, 'Drawing', true);
+    }
+  })
+
+  // When someone submits a guess (to the drawing shown onscreen) ...
+  socket.on('submit-guess', state => {
+    let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+
+    console.log('Received guess "' + state.guess + '" in room ' + room)
+
+    // add guess to array of guesses and save whose it was
+    rooms[room].guesses.push({ guess: state.guess, player: socket.id })
+
+    // check if all guesses are done
+    // the player who drew the picture, obviously, DOES NOT GUESS
+    let allGuessesDone = (rooms[room].guesses.length == (Object.keys(rooms[room].players).length - 1))
+    if(allGuessesDone) {
+      gotoNextState(room, 'GuessingPick', true)
     }
   })
 
@@ -291,11 +315,52 @@ io.on('connection', socket => {
           // In the submit-drawing signal, it already checks if all drawings have been submitted, and starts the next state
           // This time, after the autofetch, it IS certain
         } else {
-          // TO DO:
-          // shuffle the players to get a player order (an array with their socket ids)
-          // this order is used to cycle through all drawings (Guessing -> Guessing Pick -> Guessing Results)
-          // then, send the first drawing to the game monitors
+          // if no player order has been established yet ...
+          if(rooms[room].playerOrder.length < 1) {
+            // get player keys
+            let pIDs = Object.keys(rooms[room].players)
+
+            // shuffle them
+            for (let i = pIDs.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pIDs[i], pIDs[j]] = [pIDs[j], pIDs[i]];
+            }
+
+            // save this new order
+            rooms[room].playerOrder = pIDs
+          }
+
+          // get current player
+          let curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+          let p = rooms[room].players[curPlayerID]
+
+          // send the next drawing
+          io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID })
+
+          // update the order pointer (so that the next time this function is called, we load the next drawing, instead of the same)
+          rooms[room].orderPointer++;
         }
+
+        timer = 60;
+        break;
+
+      // If the next state is the own where we pick the correct guess from the game screen ...
+      case 'GuessingPick':
+        // we should have a list of guesses now
+        let guesses = rooms[room].guesses
+
+        // TO DO:
+        // add the correct title to this list
+
+
+        // shuffle them
+        for (let i = guesses.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [guesses[i], guesses[j]] = [guesses[j], guesses[i]];
+        }
+
+        // throw them back (to both monitor and controller)
+        io.in(room).emit('return-guesses', { guesses: guesses })
 
         timer = 60;
         break;

@@ -1,4 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
+import dynamicLoadImage from './drawing/dynamicLoadImage'
+//import loadImageComplete from './drawing/loadImageComplete'
 
 /**
  * GAME DRAWING
@@ -38,6 +40,10 @@ class GameDrawing extends Phaser.State {
       playersDoneCounter++;
     })
 
+    socket.on('return-drawing', data => {
+      serverInfo.drawing = data
+    })
+
     socket.on('next-state', data => {
       serverInfo.timer = data.timer
       gm.state.start('GameGuessing')
@@ -63,26 +69,8 @@ class GameDrawing extends Phaser.State {
       let dataURI = data[key].profile
       let imageName = 'profileImage' + data[key].name // creates unique name by appending the username
 
-      let doesKeyExist = gm.cache.checkKey(Phaser.Cache.IMAGE, imageName)
-
-      if(!doesKeyExist) {
-        // load the image; display once loaded
-        var loader = new Phaser.Loader(gm); 
-        loader.image(imageName, dataURI+'');
-        loader.onLoadComplete.addOnce(this.loadImageComplete, this, 0, gm, (x - 100), y - 30, imageName);
-        loader.start();
-      } else {
-        // if image was already in cache, just add the sprite (but don't load it again)
-        this.loadImageComplete(gm, (x - 100), (y - 30), imageName)
-      }
-
+      dynamicLoadImage(gm, {x: (x - 100), y: (y - 30)}, { width:60, height:78 }, imageName, dataURI)
     }
-  }
-
-  loadImageComplete(gm, x, y, name) {
-    let newSprite = gm.add.sprite(x, y, name)
-    newSprite.width = 60
-    newSprite.height = 78
   }
 }
 

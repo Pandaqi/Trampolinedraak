@@ -76,6 +76,11 @@ class ControllerDrawing extends Phaser.State {
 
     this.timer = serverInfo.timer;
 
+    // save whose drawing is displayed on screen, so we know if this controller is the owner or not
+    socket.on('return-drawing', data => {
+      serverInfo.drawing = data
+    })
+
     // when next state is called, clean the GUI, move the canvas somewhere safe, and start the next state
     socket.on('next-state', data => {
       serverInfo.timer = data.timer;

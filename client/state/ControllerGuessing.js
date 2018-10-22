@@ -16,31 +16,45 @@ class ControllerGuessing extends Phaser.State {
 
     let div = document.getElementById("main-controller")
 
-    let p1 = document.createElement("p")
-    p1.innerHTML = 'What do you think this drawing means?'
-    div.appendChild(p1)
+    if(serverInfo.drawing.id == socket.id) {
+      // if the drawing is our own, do nothing
+      let p1 = document.createElement("p")
+      p1.innerHTML = "This is your drawing. I hope you're happy with yourself.";
+      div.appendChild(p1)
+    } else {
+      // if it's someone else's drawing, guess what it represents!
+      let p1 = document.createElement("p")
+      p1.innerHTML = 'What do you think this drawing means?'
+      div.appendChild(p1)
 
-    let inp1 = document.createElement("input")
-    inp1.type = "text";
-    inp1.placeholder = "your guess ..."
-    div.appendChild(inp1)
+      let inp1 = document.createElement("input")
+      inp1.type = "text";
+      inp1.placeholder = "your guess ..."
+      div.appendChild(inp1)
 
-    // display button to submit guess
-    let btn1 = document.createElement("button")
-    btn1.innerHTML = 'Submit guess'
-    btn1.addEventListener('click', function(event) {
-      // send the guess to the server
-      socket.emit('submit-guess', { guess: inp1.value })
+      // display button to submit guess
+      let btn1 = document.createElement("button")
+      btn1.innerHTML = 'Submit guess'
+      btn1.addEventListener('click', function(event) {
+        // send the guess to the server
+        socket.emit('submit-guess', { guess: inp1.value })
 
-      // Remove submit button (and input text)
-      btn1.remove()
-      inp1.remove()
+        // Remove submit button (and input text)
+        btn1.remove()
+        inp1.remove()
 
-      p1.innerHTML = "Wow ... you're so creative!";
-    })
-    div.appendChild(btn1)
+        p1.innerHTML = "Wow ... you're so creative!";
+      })
+      div.appendChild(btn1)
+
+    }
 
     this.timer = serverInfo.timer
+
+    // save the list of guesses
+    socket.on('return-guesses', data => {
+      serverInfo.guesses = data
+    })
 
     socket.on('next-state', data => {
       serverInfo.timer = data.timer
@@ -61,7 +75,7 @@ class ControllerGuessing extends Phaser.State {
         // Send message to the server that the next phase should start
         // TO DO: Create the next state, uncomment emit below
         let socket = serverInfo.socket
-        //socket.emit('timer-complete', { nextState: 'Guessing' })
+        socket.emit('timer-complete', { nextState: 'GuessingPick' })
       }
     }
   }

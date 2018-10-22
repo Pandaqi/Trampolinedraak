@@ -7,4 +7,6 @@ export const serverInfo = {
   roomCode: '',
   vip: false,
   timer: 0,
+  drawing: null,
+  guesses: null,
 }
