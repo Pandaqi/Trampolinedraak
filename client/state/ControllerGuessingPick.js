@@ -28,6 +28,10 @@ class ControllerGuessingPick extends Phaser.State {
       p1.innerHTML = "Which of these do you think is the correct title?";
       div.appendChild(p1)
 
+      // hold all the buttons in a container; much cleaner
+      let container = document.createElement("span")
+      div.appendChild(container)
+
       for(let i = 0; i < guesses.length; i++) {
         // display button for each guess
         let btn1 = document.createElement("button")
@@ -38,20 +42,23 @@ class ControllerGuessingPick extends Phaser.State {
           // send the guess to the server
           socket.emit('vote-guess', { guess: this.value })
 
-          // Remove all buttons (yes, it can remove itself in its own eventListener)
-          for(let j = 0; j < buttonArr.length; j++) {
-            buttonArr[i].remove()
-          }
-
           // Inform user that it was succesful
           p1.innerHTML = "Really? You think it's that?!"
+
+          // Remove all buttons
+          container.remove();
         })
-        div.appendChild(btn1)
-        buttonArr.push(btn1)
+        container.appendChild(btn1)
       }
     }
 
     this.timer = serverInfo.timer;
+
+    socket.on('next-state', data => {
+      serverInfo.timer = data.timer
+      document.getElementById('main-controller').innerHTML = '';
+      gm.state.start('ControllerGuessingResults')
+    })
 
     console.log("Controller Guessing Pick state");
   }

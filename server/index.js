@@ -38,7 +38,8 @@ io.on('connection', socket => {
       drawingsSubmitted: 0,
       playerOrder: [],
       orderPointer: 0,
-      guesses: []
+      guesses: [],
+      guessVotes: [],
     }
 
     // join the room (room is "automatically created" when someone joins it)
@@ -208,7 +209,7 @@ io.on('connection', socket => {
 
       // notify the game monitors
       // (only send the player that is done, not the whole playerlist)
-      io.in(room).emit('player-done', { player: rooms[room].players[socket.id] })
+      io.in(room).emit('player-done', rooms[room].players[socket.id])
 
       // update drawings counter
       rooms[room].drawingsSubmitted++;
@@ -276,9 +277,10 @@ io.on('connection', socket => {
 
     // save the vote
     rooms[room].players[socket.id].guessVote = state.guess
+    rooms[room].guessVotes.push(state.guess)
 
     // if all votes are done, immediately start results
-    let allVotesDone = (rooms[room].guesses.length == (rooms[room].playerCount - 1))
+    let allVotesDone = (rooms[room].guessVotes.length == (rooms[room].playerCount - 1))
     if(allVotesDone) {
       gotoNextState(room, 'GuessingResults', true)
     }
@@ -456,6 +458,7 @@ io.on('connection', socket => {
 
         // already wipe out this cycle
         rooms[room].guesses = []
+        rooms[room].guessVotes = []
 
         // and then we just wait for the monitor to reveal the results :p
         // no timer here; whenever the VIP feels like it, he can press a button on his device and continue to the next cycle

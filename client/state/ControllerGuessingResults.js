@@ -16,6 +16,9 @@ class ControllerGuessingResults extends Phaser.State {
 
     let div = document.getElementById("main-controller")
 
+    // the vip can continue to the next cycle (or game over) whenever he or she pleases
+    // this allows for skipping "boring" animations or reveal phases
+    // but also for pausing the game (by NOT pressing it) if someone needs food/a bathroom break/fresh air
     if(serverInfo.vip) {
       let p1 = document.createElement("p")
       p1.innerHTML = "Tap the button below whenever you want to start the next drawing";
@@ -49,7 +52,6 @@ class ControllerGuessingResults extends Phaser.State {
   }
 
   update () {
-    // Perform countdown, if we're VIP
   }
 }
 

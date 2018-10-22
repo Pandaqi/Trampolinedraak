@@ -50,6 +50,12 @@ class GameGuessingPick extends Phaser.State {
     this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
     this.timer = serverInfo.timer
 
+    // go to next state
+    socket.on('next-state', data => {
+      serverInfo.timer = data.timer
+      gm.state.start('GameGuessingResults')
+    })
+
     console.log("Game Guessing Pick state")
   }
 

@@ -35,7 +35,9 @@ class GameDrawing extends Phaser.State {
     // if a player is done -> show it by loading the player name + profile onscreen
     let playersDoneCounter = 0
     socket.on('player-done', data => {
-      this.loadPlayerVisuals(gm, gm.width*0.5, 80 + playersDoneCounter*60, colors[playersDoneCounter], data)
+      console.log("Player done (" + data.name + ") with drawing")
+
+      this.loadPlayerVisuals(gm, gm.width*0.5, 80 + playersDoneCounter*60, colors[data.rank], data)
       playersDoneCounter++;
     })
 
@@ -63,12 +65,13 @@ class GameDrawing extends Phaser.State {
   loadPlayerVisuals(gm, x, y, color, data) {
     let style = { font: "bold 32px Arial", fill: color};
     let newItem = gm.add.text(x, y, data.name, style);
+    newItem.anchor.setTo(0, 0.5)
 
     if(data.profile != null) {
       let dataURI = data.profile
       let imageName = 'profileImage' + data.name // creates unique name by appending the username
 
-      dynamicLoadImage(gm, {x: (x - 100), y: (y - 30)}, { width:60, height:78 }, imageName, dataURI)
+      dynamicLoadImage(gm, {x: (x - 100), y: y}, { width:60, height:78 }, imageName, dataURI)
     }
   }
 }
