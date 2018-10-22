@@ -47,6 +47,7 @@ class GameWaiting extends Phaser.State {
       let x = gm.width*0.5
       let y = 80 + data.rank*60
       let newItem = gm.add.text(x, y, data.name, style);
+      newItem.anchor.setTo(0, 0.5)
     })
 
     socket.on('player-updated-profile', data => {
@@ -57,7 +58,7 @@ class GameWaiting extends Phaser.State {
         let x = gm.width*0.5
         let y = 80 + data.rank*60
 
-        dynamicLoadImage(gm, {x: (x - 100), y: (y - 30)}, { width:60, height:78 }, imageName, dataURI)
+        dynamicLoadImage(gm, {x: (x - 100), y: y }, { width:60, height:78 }, imageName, dataURI)
       }
 
       // create a bubble at random location for each player

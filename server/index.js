@@ -240,7 +240,7 @@ io.on('connection', socket => {
     r.adverbs.push(s[3])
 
     // if everyone has submitted suggestions, start the game immediately!
-    let allSuggestionsDone = (r.nouns.length == rooms[room].playersCount)
+    let allSuggestionsDone = (r.nouns.length == rooms[room].playerCount)
     if(allSuggestionsDone) {
       gotoNextState(room, 'Drawing', true);
     }
@@ -259,7 +259,7 @@ io.on('connection', socket => {
 
     // check if all guesses are done (if so, immediately start next round)
     // the player who drew the picture, obviously, DOES NOT GUESS
-    let allGuessesDone = (rooms[room].guesses.length == (rooms[room].playersCount - 1))
+    let allGuessesDone = (rooms[room].guesses.length == (rooms[room].playerCount - 1))
     if(allGuessesDone) {
       gotoNextState(room, 'GuessingPick', true)
     }
@@ -277,7 +277,7 @@ io.on('connection', socket => {
     rooms[room].players[socket.id].guessVote = state.guess
 
     // if all votes are done, immediately start results
-    let allVotesDone = (rooms[room].guesses.length == (rooms[room].playersCount - 1))
+    let allVotesDone = (rooms[room].guesses.length == (rooms[room].playerCount - 1))
     if(allVotesDone) {
       gotoNextState(room, 'GuessingResults', true)
     }
@@ -289,7 +289,10 @@ io.on('connection', socket => {
     })[0]
 
     let nextState = state.nextState
-    let certain = state.certain || false
+    let certain = false
+    if(state.certain !== undefined && state.certain !== null) {
+      certain = state.certain
+    }
     gotoNextState(room, nextState, certain)
   })
 
