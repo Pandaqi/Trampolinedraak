@@ -62,7 +62,7 @@ class GameDrawing extends Phaser.State {
   }
 
   loadPlayerVisuals(gm, x, y, color, data) {
-    style = { font: "bold 32px Arial", fill: color};
+    let style = { font: "bold 32px Arial", fill: color};
     let newItem = gm.add.text(x, y, data[key].name, style);
 
     if(data[key].profile != null) {

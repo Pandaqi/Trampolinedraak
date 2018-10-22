@@ -53,7 +53,6 @@ class ControllerGuessingPick extends Phaser.State {
 
     this.timer = serverInfo.timer;
 
-
     console.log("Controller Guessing Pick state");
   }
 
@@ -67,7 +66,7 @@ class ControllerGuessingPick extends Phaser.State {
         // Send message to the server that the next phase should start
         // TO DO: Create the other Controller states, uncomment emit below
         let socket = serverInfo.socket
-        //socket.emit('timer-complete', { nextState: 'Guessing' })
+        socket.emit('timer-complete', { nextState: 'GuessingResults' })
       }
     }
   }

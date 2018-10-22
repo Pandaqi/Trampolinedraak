@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import dynamicLoadImage from './drawing/dynamicLoadImage'
 
 /**
  * GAME GUESSING PICK
@@ -46,7 +47,7 @@ class GameGuessingPick extends Phaser.State {
     }
 
     // set timer, load timer text
-    this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
+    this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
     this.timer = serverInfo.timer
 
     console.log("Game Guessing Pick state")

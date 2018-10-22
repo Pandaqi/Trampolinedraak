@@ -37,7 +37,7 @@ class GameGuessing extends Phaser.State {
 
     dynamicLoadImage(gm, {x: gm.width*0.5, y:gm.height*0.5}, { width: finalImageWidth, height: finalImageWidth*1.3}, imageName, dataURI)
 
-    this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
+    this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
     this.timer = serverInfo.timer
 
     // save the list of guesses

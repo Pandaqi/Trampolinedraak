@@ -99,7 +99,17 @@ io.on('connection', socket => {
         vip = true
       }
 
-      let playerObject =  { name: name, vip: vip, rank: rank, profile: null, room: code }
+      let playerObject =  { 
+        name: name, 
+        vip: vip, 
+        rank: rank, 
+        profile: null, 
+        room: code,
+        drawing: null,
+        drawingTitle: '',
+        guessVote: '', 
+        score: 0,
+      }
       curRoom.players[socket.id] = playerObject
 
       io.in(code).emit('new-player', playerObject)
@@ -163,7 +173,6 @@ io.on('connection', socket => {
 
   // When the VIP has decided to start the game ...
   socket.on('start-game', state => {
-    // TO DO: Perform code to actually start the game (like, distribute player roles, setup variables, etc.)
     let room = state.roomCode;
     if(rooms[room] == undefined) {
       console.log("Error: Tried to start game in undefined room")
@@ -171,6 +180,7 @@ io.on('connection', socket => {
     }
 
     rooms[room].gameStarted = true;
+    rooms[room].playerCount = Object.keys(rooms[room].players).length
 
     // Inform all players about this change (which should switch them to the next state)
     gotoNextState(room, 'Suggestions', true)
@@ -204,7 +214,7 @@ io.on('connection', socket => {
 
       // If all drawings have been submitted, start the next state automatically
       // This can be because all users have submitted, OR because the autofetch by the server is complete
-      if(rooms[room].drawingsSubmitted == Object.keys(rooms[room].players).length) {
+      if(rooms[room].drawingsSubmitted == rooms[room].playerCount) {
         gotoNextState(room, 'Guessing', true)
       }
     }
@@ -230,7 +240,7 @@ io.on('connection', socket => {
     r.adverbs.push(s[3])
 
     // if everyone has submitted suggestions, start the game immediately!
-    let allSuggestionsDone = (r.nouns.length == Object.keys(rooms[room].players).length)
+    let allSuggestionsDone = (r.nouns.length == rooms[room].playersCount)
     if(allSuggestionsDone) {
       gotoNextState(room, 'Drawing', true);
     }
@@ -245,13 +255,31 @@ io.on('connection', socket => {
     console.log('Received guess "' + state.guess + '" in room ' + room)
 
     // add guess to array of guesses and save whose it was
-    rooms[room].guesses.push({ guess: state.guess, player: socket.id })
+    rooms[room].guesses.push({ guess: state.guess, player: socket.id, correct: false })
 
-    // check if all guesses are done
+    // check if all guesses are done (if so, immediately start next round)
     // the player who drew the picture, obviously, DOES NOT GUESS
-    let allGuessesDone = (rooms[room].guesses.length == (Object.keys(rooms[room].players).length - 1))
+    let allGuessesDone = (rooms[room].guesses.length == (rooms[room].playersCount - 1))
     if(allGuessesDone) {
       gotoNextState(room, 'GuessingPick', true)
+    }
+  })
+
+  // When someone votes for a certain guess to be the correct one ...
+  socket.on('vote-guess', state => {
+    let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+
+    console.log('Received guess vote "' + state.guess + '" in room ' + room)
+
+    // save the vote
+    rooms[room].players[socket.id].guessVote = state.guess
+
+    // if all votes are done, immediately start results
+    let allVotesDone = (rooms[room].guesses.length == (rooms[room].playersCount - 1))
+    if(allVotesDone) {
+      gotoNextState(room, 'GuessingResults', true)
     }
   })
 
@@ -330,28 +358,39 @@ io.on('connection', socket => {
             rooms[room].playerOrder = pIDs
           }
 
+          // check if this is the final round
+          let curPointer = rooms[room].orderPointer
+          let lastDrawing = false
+          if(curPointer == (Object.keys(rooms[room].players).length - 1)) {
+            lastDrawing = true
+          }
+
           // get current player
-          let curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+          let curPlayerID = rooms[room].playerOrder[curPointer]
           let p = rooms[room].players[curPlayerID]
 
           // send the next drawing
-          io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID })
+          io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID, lastDrawing: lastDrawing })
 
           // update the order pointer (so that the next time this function is called, we load the next drawing, instead of the same)
-          rooms[room].orderPointer++;
+          curPointer++;
         }
 
         timer = 60;
         break;
 
-      // If the next state is the own where we pick the correct guess from the game screen ...
+      // If the next state is the one where we pick the correct guess from the game screen ...
       case 'GuessingPick':
         // we should have a list of guesses now
         let guesses = rooms[room].guesses
 
-        // TO DO:
         // add the correct title to this list
+        // first get current player
+        let curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+        let p = rooms[room].players[curPlayerID]
 
+        // then push the guess (and the player ID)
+        guesses.push({ guess: p.drawingTitle, player: curPlayerID, correct: true })
 
         // shuffle them
         for (let i = guesses.length - 1; i > 0; i--) {
@@ -363,6 +402,55 @@ io.on('connection', socket => {
         io.in(room).emit('return-guesses', { guesses: guesses })
 
         timer = 60;
+        break;
+
+      // If the next state shows the results from this guessing round ...
+      case 'GuessingResults':
+        // already change the score
+        // If X guesses the correct title, X gets 1000 points
+        // If X guesses the title of Y, Y gets 750 points
+        // For every player that guesses the correct title of X's drawing, X gets 1000 points
+        // But, if EVERYONE guesses correctly, X loses 2000 points
+        
+        let curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
+        let realTitle = rooms[room].players[curPlayerID].drawingTitle
+        let countCorrect = 0;
+        for(let key in rooms[room].players) {
+          // the player who drew the picture already gets point from checking the other players
+          // so exclude him from this loop
+          if(key != curPlayerID) {
+            let p = rooms[room].players[key]
+            let myVote = p.guessVote
+
+            // if the vote was correct ...
+            if(myVote == realTitle) {
+              p.score += 1000;
+              rooms[room].players[curPlayerID].score += 1000;
+              countCorrect++;
+            } else {
+              // if the vote was incorrect, search whose title it was, give them points
+              for(let key2 in rooms[room].players) {
+                let p2 = rooms[room].players[key2]
+                if(myVote == p2.drawingTitle) {
+                  p2.score += 750;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // if all players were correct, subtract the points again!
+        if(countCorrect == rooms[room].playerCount) {
+          rooms[room].players[curPlayerID].score -= (playerCount + 2)*1000;
+        }
+
+        // already wipe out this cycle
+        rooms[room].guesses = []
+
+        // and then we just wait for the monitor to reveal the results :p
+        // no timer here; whenever the VIP feels like it, he can press a button on his device and continue to the next cycle
+        timer = 0; 
         break;
     }
 
