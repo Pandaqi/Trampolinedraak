@@ -15,6 +15,7 @@ class ControllerGuessingResults extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
+    let canvas = document.getElementById("canvas-container")
 
     // the vip can continue to the next cycle (or game over) whenever he or she pleases
     // this allows for skipping "boring" animations or reveal phases
@@ -33,18 +34,6 @@ class ControllerGuessingResults extends Phaser.State {
       })
       div.appendChild(btn1)
     }
-
-    // save whose drawing is displayed on screen, so we know if this controller is the owner or not
-    socket.on('return-drawing', data => {
-      serverInfo.drawing = data
-    })
-
-    // when next state is called, clean the GUI, move the canvas somewhere safe, and start the next state
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer;
-      document.getElementById('main-controller').innerHTML = '';
-      gm.state.start('ControllerGuessing')
-    })
 
     console.log("Controller Guessing Results state");
   }

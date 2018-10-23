@@ -1,5 +1,7 @@
 import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
+import { gameTimer } from './utils/timers'
+import { playerColors } from './utils/colors'
 
 /**
  * GAME GUESSING PICK
@@ -49,23 +51,12 @@ class GameGuessingPick extends Phaser.State {
     // set timer, load timer text
     this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
     this.timer = serverInfo.timer
-
-    // go to next state
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer
-      gm.state.start('GameGuessingResults')
-    })
-
+    
     console.log("Game Guessing Pick state")
   }
 
   update () {
-    if(this.timer > 0) {
-      this.timer -= this.game.time.elapsed/1000;
-      this.timerText.text = Math.ceil(this.timer);
-    } else {
-      this.timerText.text = "Time's up!";
-    }
+    gameTimer(this)
   }
 }
 

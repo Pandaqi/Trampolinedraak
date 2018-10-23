@@ -1,4 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
+import { controllerTimer } from './utils/timers'
+import { playerColors } from './utils/colors'
 
 class ControllerDrawing extends Phaser.State {
   constructor () {
@@ -13,9 +15,6 @@ class ControllerDrawing extends Phaser.State {
   create () {    
     let gm = this.game
     let socket = serverInfo.socket
-    let colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
-    '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
-    '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
     let div = document.getElementById("main-controller")
     let drawingSubmitted = false;
@@ -36,7 +35,7 @@ class ControllerDrawing extends Phaser.State {
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);
-    this.bmd.ctx.strokeStyle = colors[serverInfo.rank]; // THIS is the actual drawing color      
+    this.bmd.ctx.strokeStyle = playerColors[serverInfo.rank]; // THIS is the actual drawing color      
     this.bmd.ctx.lineWidth   = 10;     
     this.bmd.ctx.lineCap     = 'round';      
     this.bmd.ctx.fillStyle = '#ff0000';      
@@ -81,26 +80,14 @@ class ControllerDrawing extends Phaser.State {
 
     this.timer = serverInfo.timer;
 
-    // save whose drawing is displayed on screen, so we know if this controller is the owner or not
-    socket.on('return-drawing', data => {
-      serverInfo.drawing = data
-    })
-
-    // when next state is called, clean the GUI, move the canvas somewhere safe, and start the next state
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer;
-      canvas.style.display = 'none';
-      document.body.appendChild(canvas)
-      document.getElementById('main-controller').innerHTML = '';
-      gm.state.start('ControllerGuessing')
-    })
-
     console.log("Controller Drawing state");
   }
 
-  update () {
-    // This is where we listen for input!
+  shutdown () {
 
+  }
+
+  update () {
     /***
      * DRAW STUFF
      ***/
@@ -126,17 +113,8 @@ class ControllerDrawing extends Phaser.State {
       this.bmd.dirty = true;
     }
 
-    // Perform countdown, if we're VIP
-    if(serverInfo.vip) {
-      if(this.timer > 0) {
-        this.timer -= this.game.time.elapsed/1000;
-      } else {
-        // TIMER IS DONE!
-        // Send message to the server that the next phase should start
-        let socket = serverInfo.socket
-        socket.emit('timer-complete', { nextState: 'Guessing' })
-      }
-    }
+    // Update timer
+    controllerTimer(this, serverInfo, 'Guessing')
   }
 }
 

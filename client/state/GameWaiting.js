@@ -9,6 +9,8 @@ let otherPlayers = {}
 
 import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
+import { playerColors } from './utils/colors'
+import loadPlayerVisuals from './drawing/loadPlayerVisuals'
 
 
 class GameWaiting extends Phaser.State {
@@ -17,23 +19,22 @@ class GameWaiting extends Phaser.State {
   }
 
   preload () {
-    // Loads files
-    //fileLoader(this.game)
-  }
-
-  create () {
-    let colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
-    '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
-    '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
-
+    // Set scaling (as game monitors can also be any size)
+    // Scale game to fit the entire window (and rescale when window is resized)
     let gm = this.game
 
-    // Scale game to fit the entire window (and rescale when window is resized)
     gm.scale.scaleMode = Phaser.ScaleManager.RESIZE
     window.addEventListener('resize', function () {  
       gm.scale.refresh();
     });
     gm.scale.refresh();
+
+    // Loads files
+    //fileLoader(this.game)
+  }
+
+  create () {
+    let gm = this.game
 
     // display room code
     var style = { font: "bold 32px Arial", fill: "#333"};
@@ -43,9 +44,12 @@ class GameWaiting extends Phaser.State {
     let socket = serverInfo.socket
 
     socket.on('new-player', data => {
-      style = { font: "bold 32px Arial", fill: colors[data.rank]};
+      console.log(playerColors)
+      console.log(data.rank)
+
+      style = { font: "bold 32px Arial", fill: playerColors[data.rank]};
       let x = gm.width*0.5
-      let y = 80 + data.rank*60
+      let y = 100 + data.rank*60
       let newItem = gm.add.text(x, y, data.name, style);
       newItem.anchor.setTo(0, 0.5)
     })
@@ -56,7 +60,7 @@ class GameWaiting extends Phaser.State {
         let imageName = 'profileImage' + data.name // creates unique name by appending the username
 
         let x = gm.width*0.5
-        let y = 80 + data.rank*60
+        let y = 100 + data.rank*60
 
         dynamicLoadImage(gm, {x: (x - 100), y: y }, { width:60, height:78 }, imageName, dataURI)
       }
@@ -68,12 +72,57 @@ class GameWaiting extends Phaser.State {
       //graphics.drawCircle(randPos[0], randPos[1], 100);
     })
 
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer
-      gm.state.start('GameSuggestions')
+    socket.on('setup-info', data => {
+      serverInfo.playerCount = data
     })
 
+    /***
+     * MAIN SOCKETS
+     * Some sockets are persistent across states
+     * They are defined ONCE here, in the waiting area, and used throughout the game
+     */
+
+    // if a player is done -> show it by loading the player name + profile onscreen
+    // do so in a circle (it works the best for any screen size AND any player count)
+    socket.on('player-done', data => {
+      console.log("Player done (" + data.name + ")")
+
+      let angle = data.rank / serverInfo.playerCount * 2 * Math.PI
+      let maxXHeight = gm.height*0.5/1.3;
+      let maxXWidth = gm.width*0.5;
+      let finalImageWidth = Math.min(maxXHeight, maxXWidth)
+
+      loadPlayerVisuals(gm, gm.width*0.5 + Math.cos(angle)*finalImageWidth, gm.height + Math.sin(angle)*finalImageWidth*1.3, playerColors[data.rank], data)
+    })
+
+    // go to next state
+    // the server gives us (within data) the name of this next state
+    socket.on('next-state', data => {
+      serverInfo.timer = data.timer
+      gm.state.start('Game' + data.nextState)
+    })
+
+    // get a drawing from the server, which starts the next Guess-Pick-Result cycle
+    // we could turn it on/off at start/end of cycle, but this seems easier and cleaner
+    socket.on('return-drawing', data => {
+      serverInfo.drawing = data
+    })
+
+    /***
+     * END MAIN SOCKETS
+     */
+
     console.log("Game waiting state")
+  }
+
+  // The shutdown function is called when we switch from one state to another
+  // In it, I can clean up this state (e.g. by removing eventListeners) before we go to another
+  shutdown() {
+    let socket = serverInfo.socket
+
+    socket.off('new-player')
+    socket.off('player-updated-profile')
+    socket.off('setup-info')
   }
 
   update () {

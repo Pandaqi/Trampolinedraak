@@ -101,8 +101,6 @@ class Menu extends Phaser.State {
           socket.disconnect(true);
         }
       })
-
-      
     }
 
 
@@ -128,7 +126,7 @@ class Menu extends Phaser.State {
       })
 
       // if joining was successful, go to the correct state
-      // if not succesful, give the player another try
+      // if not succesful, give the player another try (disconnect from socket for cleanliness, and saving bandwidth)
       socket.on('watch-response', data => {
         if(data.success) {
           // remove overlay

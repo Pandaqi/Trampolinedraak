@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import { controllerTimer } from './utils/timers'
 
 class ControllerGuessing extends Phaser.State {
   constructor () {
@@ -15,6 +16,7 @@ class ControllerGuessing extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
+    let canvas = document.getElementById("canvas-container")
 
     if(serverInfo.drawing.id == socket.id) {
       // if the drawing is our own, do nothing
@@ -54,30 +56,18 @@ class ControllerGuessing extends Phaser.State {
     // save the list of guesses
     socket.on('return-guesses', data => {
       serverInfo.guesses = data
-    })
 
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer
-      document.getElementById('main-controller').innerHTML = '';
-      gm.state.start('ControllerGuessingPick')
+      socket.off('return-guesses')
     })
 
     console.log("Controller Guessing state");
   }
 
+  shutdown() {
+  }
+
   update () {
-    // Perform countdown, if we're VIP
-    if(serverInfo.vip) {
-      if(this.timer > 0) {
-        this.timer -= this.game.time.elapsed/1000;
-      } else {
-        // TIMER IS DONE!
-        // Send message to the server that the next phase should start
-        // TO DO: Create the next state, uncomment emit below
-        let socket = serverInfo.socket
-        socket.emit('timer-complete', { nextState: 'GuessingPick' })
-      }
-    }
+    controllerTimer(this, serverInfo, 'GuessingPick')
   }
 }
 

@@ -1,5 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
+import { playerColors } from './utils/colors'
 
 /**
  * GAME GUESSING RESULTS
@@ -26,12 +27,6 @@ class GameGuessingResults extends Phaser.State {
     let style = { font: "bold 32px Arial", fill: "#333"};
     let newItem = gm.add.text(gm.width*0.5, 20, "Let's see how you did!", style);
     newItem.anchor.setTo(0.5, 0)
-
-    // go to next state
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer
-      gm.state.start('GameGuessingResults')
-    })
 
     console.log("Game Guessing Results state")
   }

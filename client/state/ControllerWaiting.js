@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import { playerColors } from './utils/colors'
 
 class ControllerWaiting extends Phaser.State {
   constructor () {
@@ -13,9 +14,6 @@ class ControllerWaiting extends Phaser.State {
   create () {    
     let gm = this.game
     let socket = serverInfo.socket
-    let colors = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
-    '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', 
-    '#9a6324', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000']
 
     let div = document.getElementById("main-controller")
     
@@ -30,13 +28,12 @@ class ControllerWaiting extends Phaser.State {
 
     // make canvas the correct size
     let desiredWidth = document.getElementById('main-controller').clientWidth
-    console.log(desiredWidth)
     let desiredHeight = desiredWidth * 1.3
     gm.scale.setGameSize(desiredWidth, desiredHeight)
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);
-    this.bmd.ctx.strokeStyle = colors[serverInfo.rank]; // THIS is the actual drawing color      
+    this.bmd.ctx.strokeStyle = playerColors[serverInfo.rank]; // THIS is the actual drawing color      
     this.bmd.ctx.lineWidth   = 10;     
     this.bmd.ctx.lineCap     = 'round';      
     this.bmd.ctx.fillStyle = '#ff0000';      
@@ -90,12 +87,35 @@ class ControllerWaiting extends Phaser.State {
       div.appendChild(btn1)
     }
 
+    /***
+     * MAIN SOCKETS
+     * Some sockets are persistent across states
+     * They are defined ONCE here, in the waiting area, and uses throughout the game
+     */
+
     socket.on('next-state', data => {
+      // set the timer
       serverInfo.timer = data.timer
+
+      // save the canvas (otherwise it is also removed when the GUI is removed)
+      canvas.style.display = 'none'
       document.body.appendChild(canvas)
+
+      // clear the GUI
       div.innerHTML = '';
-      gm.state.start('ControllerSuggestions')
+
+      // start the next state
+      gm.state.start('Controller' + data.nextState)
     })
+
+    // save whose drawing is displayed on screen, so we know if this controller is the owner or not
+    socket.on('return-drawing', data => {
+      serverInfo.drawing = data
+    })
+
+    /***
+     * END MAIN SOCKETS
+     */
 
     console.log("Controller Waiting state");
   }

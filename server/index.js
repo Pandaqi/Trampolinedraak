@@ -91,10 +91,11 @@ io.on('connection', socket => {
     //  => check if it's the first player (if so => make it the VIP)
     //  => send an update to all other players (in the same room, of course)
     let vip = false
+    let rank = -1
     if(success) {
       socket.join(code)
 
-      let rank = Object.keys(curRoom.players).length
+      rank = Object.keys(curRoom.players).length
 
       if(rank < 1) {
         vip = true
@@ -314,6 +315,9 @@ io.on('connection', socket => {
     switch(nextState) {
       // If the next state is the suggestions state (first of the game) ...
       case 'Suggestions':
+        // inform (only the monitors) of some extra info, such as player count
+        io.in(room).emit('setup-info', rooms[room].playerCount)
+
         // just set the timer
         timer = 60;
         break;
@@ -349,13 +353,21 @@ io.on('connection', socket => {
 
       // If the next state is the guessing state ...
       case 'Guessing':
+        let allDrawingsSubmitted = (rooms[room].drawingsSubmitted == rooms[room].playerCount)
         if(!certain) {
-          // Ping all users to make sure you collect their drawings
-          io.in(room).emit('fetch-drawing', {})
+          // if our uncertainty is unfounded, and we actually have all the drawings, just continue normally
+          if(allDrawingsSubmitted) {
+            certain = true;
+          } else {
+            // Ping all users to make sure you collect their drawings
+            io.in(room).emit('fetch-drawing', {})
 
-          // In the submit-drawing signal, it already checks if all drawings have been submitted, and starts the next state
-          // This time, after the autofetch, it IS certain
-        } else {
+            // In the submit-drawing signal, it already checks if all drawings have been submitted, and starts the next state
+            // This time, after the autofetch, it IS certain
+          }
+        }
+
+        if(certain) {
           // if no player order has been established yet ...
           if(rooms[room].playerOrder.length < 1) {
             // get player keys

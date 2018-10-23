@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import { controllerTimer } from './utils/timers'
 
 class ControllerSuggestions extends Phaser.State {
   constructor () {
@@ -15,6 +16,7 @@ class ControllerSuggestions extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
+    let canvas = document.getElementById("canvas-container")
 
     // THIS IS THE CODE FOR THE "GIVE SUGGESTIONS"-state only
     let p1 = document.createElement("p")
@@ -73,28 +75,17 @@ class ControllerSuggestions extends Phaser.State {
       serverInfo.drawingTitle = data.title
     })
 
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer
-      div.innerHTML = ''
-      gm.state.start('Controller' + data.nextState)
-    })
-
     console.log("Controller Suggestions state")
   }
 
-  update () {
-    // Perform countdown, if we're VIP
-    if(serverInfo.vip) {
-      if(this.timer > 0) {
-        this.timer -= this.game.time.elapsed/1000;
-      } else {
-        // TIMER IS DONE!
-        // Send message to the server that the next phase should start
-        let socket = serverInfo.socket
-        socket.emit('timer-complete', { nextState: 'Drawing' })
-      }
-    }
+  shutdown () {
+    let socket = serverInfo.socket
 
+    socket.off('drawing-title')
+  }
+
+  update () {
+    controllerTimer(this, serverInfo, 'Drawing')
   }
 }
 
