@@ -44,15 +44,24 @@ class GameGuessingPick extends Phaser.State {
     let guesses = serverInfo.guesses
     for(let i = 0; i < guesses.length; i++) {
       let angle = i / guesses.length * 2 * Math.PI
-      let guessText = gm.add.text(gm.width*0.5 + Math.cos(angle)*finalImageWidth, gm.height*0.5 + Math.sin(angle)*finalImageWidth*1.3, guesses[i].guess, style);
+      let guessText = gm.add.text(gm.width*0.5 + Math.cos(angle)*finalImageWidth, gm.height*0.5 + Math.sin(angle)*finalImageWidth*1.3, guesses[i], style);
       guessText.anchor.setTo(0.5, 0.5)
     }
 
     // set timer, load timer text
     this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
     this.timer = serverInfo.timer
+
+    // receive the final guess list
+    socket.on('final-guess-results', data => {
+      serverInfo.finalGuessResults = data
+    })
     
     console.log("Game Guessing Pick state")
+  }
+
+  shutdown() {
+    serverInfo.socket.off('final-guess-results')
   }
 
   update () {

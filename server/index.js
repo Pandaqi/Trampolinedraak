@@ -38,7 +38,7 @@ io.on('connection', socket => {
       drawingsSubmitted: 0,
       playerOrder: [],
       orderPointer: 0,
-      guesses: [],
+      guesses: {},
       guessVotes: [],
     }
 
@@ -261,8 +261,9 @@ io.on('connection', socket => {
 
     console.log('Received guess "' + state.guess + '" in room ' + room)
 
-    // add guess to array of guesses and save whose it was
-    rooms[room].guesses.push({ guess: state.guess, player: socket.id, correct: false })
+    // add guess to dictionary of guesses and save whose it was
+    let name = rooms[room].players[socket.id].name
+    rooms[room].guesses[state.guess] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
 
     // check if all guesses are done (if so, immediately start next round)
     // the player who drew the picture, obviously, DOES NOT GUESS
@@ -413,19 +414,18 @@ io.on('connection', socket => {
         // first get current player
         curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
         p = rooms[room].players[curPlayerID]
-
-        // then push the guess (and the player ID)
-        guesses.push({ guess: p.drawingTitle, player: curPlayerID, correct: true })
+        guesses[p.drawingTitle] = { player: curPlayerID, name: p.name, whoGuessedIt: [], correct: true }
 
         // shuffle them
-        for (let i = guesses.length - 1; i > 0; i--) {
+        let guessKeys = Object.keys(guesses)
+        for (let i = guessKeys.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [guesses[i], guesses[j]] = [guesses[j], guesses[i]];
+            [guessKeys[i], guessKeys[j]] = [guessKeys[j], guessKeys[i]];
         }
 
         // throw them back (to both monitor and controller)
         // to save internet (and computational power), just send the array immediately
-        io.in(room).emit('return-guesses', guesses)
+        io.in(room).emit('return-guesses', guessKeys)
 
         timer = 60;
         break;
@@ -443,7 +443,7 @@ io.on('connection', socket => {
         let realTitle = rooms[room].players[curPlayerID].drawingTitle
         let countCorrect = 0;
         for(let key in rooms[room].players) {
-          // the player who drew the picture already gets point from checking the other players
+          // the player who drew the picture already gets points from checking the other players
           // so exclude him from this loop
           if(key != curPlayerID) {
             p = rooms[room].players[key]
@@ -451,15 +451,24 @@ io.on('connection', socket => {
 
             // if the vote was correct ...
             if(myVote == realTitle) {
+              //add score
               p.score += 1000;
               rooms[room].players[curPlayerID].score += 1000;
+
+              // increase amount of people who guessed correctly
               countCorrect++;
+
+              // save who guessed correctly
+              rooms[room].guesses[realTitle].whoGuessedIt.push(p.name)
             } else {
               // if the vote was incorrect, search whose title it was, give them points
               for(let key2 in rooms[room].players) {
                 let p2 = rooms[room].players[key2]
                 if(myVote == p2.drawingTitle) {
                   p2.score += 750;
+
+                  // save who guessed this
+                  rooms[room].guesses[myVote].whoGuessedIt.push(p.name)
                   break;
                 }
               }
@@ -468,12 +477,18 @@ io.on('connection', socket => {
         }
 
         // if all players were correct, subtract the points again!
-        if(countCorrect == rooms[room].playerCount) {
+        // (of course, the player who made the drawing doesn't vote)
+        if(countCorrect == (rooms[room].playerCount - 1)) {
           rooms[room].players[curPlayerID].score -= (playerCount + 2)*1000;
         }
 
+        // send each guess (including the correct title), who guessed it, and who wrote it
+        io.in(room).emit('final-guess-results', rooms[room].guesses)
+
+        // also, already send the current scores
+
         // already wipe out this cycle
-        rooms[room].guesses = []
+        rooms[room].guesses = {}
         rooms[room].guessVotes = []
 
         // and then we just wait for the monitor to reveal the results :p

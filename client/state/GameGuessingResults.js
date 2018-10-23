@@ -28,6 +28,32 @@ class GameGuessingResults extends Phaser.State {
     let newItem = gm.add.text(gm.width*0.5, 20, "Let's see how you did!", style);
     newItem.anchor.setTo(0.5, 0)
 
+    // List all titles, including who guessed the title (+ score bonus), and who wrote it (+score bonus)
+    // Mark the correct title specifically
+    // TO DO: Score bonusses ??
+    let fg = serverInfo.finalGuessResults
+    let counter = 0
+    for(let key in fg) {
+      // highlight the correct title
+      style = { font: "bold 32px Arial", fill: "#333"};
+      if(fg.correct) { style.fill = '#237a23' }
+
+      let text = gm.add.text(gm.width*0.5, 50 + counter*80, key, style)
+      text.anchor.setTo(0.5, 0.5)
+
+      style = { font: "16px Arial", fill: "#333"};
+      let text2 = gm.add.text(gm.width*0.5, 50 + counter*80 + 32, 'Guessed by: ' + fg[key].whoGuessedIt, style)
+      text2.anchor.setTo(0.5, 0.5)
+
+      if(!fg.correct) {
+        style = { font: "16px Arial", fill: "#333"};
+        let text3 = gm.add.text(gm.width*0.5, 50 + counter*80 + 50, 'Written by: ' + fg[key].name, style)
+        text3.anchor.setTo(0.5, 0.5)
+      }
+
+      counter++;
+    }
+
     console.log("Game Guessing Results state")
   }
 

@@ -37,8 +37,8 @@ class ControllerGuessingPick extends Phaser.State {
       for(let i = 0; i < guesses.length; i++) {
         // display button for each guess
         let btn1 = document.createElement("button")
-        btn1.innerHTML = guesses[i].guess
-        btn1.value = guesses[i].guess
+        btn1.innerHTML = guesses[i]
+        btn1.value = guesses[i]
 
         btn1.addEventListener('click', function(event) {
           // send the guess to the server
