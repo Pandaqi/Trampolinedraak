@@ -66,6 +66,10 @@ class ControllerDrawing extends Phaser.State {
     })
     div.appendChild(btn1)
 
+    let p2 = document.createElement("p")
+    p2.innerHTML = 'Create your best art! Do it! Do it now!'
+    div.appendChild(p2)
+
     // just to be sure, the computer auto-fetches all unsubmitted drawings
     socket.on('fetch-drawing', data => {
       // if we already submitted: no need to waste internet bandwidth
@@ -75,7 +79,7 @@ class ControllerDrawing extends Phaser.State {
       let dataURI = bmdReference.canvas.toDataURL()
       socket.emit('submit-drawing', { dataURI: dataURI, type: "ingame"})
 
-      socket.off('fetch-drawing')
+      drawingSubmitted = true;
     })
 
     this.timer = serverInfo.timer;
@@ -84,7 +88,7 @@ class ControllerDrawing extends Phaser.State {
   }
 
   shutdown () {
-
+    serverInfo.socket.off('fetch-drawing')
   }
 
   update () {

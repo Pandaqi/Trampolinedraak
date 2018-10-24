@@ -165,7 +165,7 @@ io.on('connection', socket => {
     } else {
       // If the disconnect is from a player, VERY MUCH PROBLEMOS
       // Delete the player
-      delete players[socket.id]
+      delete rooms[room].players[socket.id]
 
       // If it was the last player, delete the whole room
       if(Object.keys(rooms[room].players).length < 1) {
