@@ -321,6 +321,7 @@ io.on('connection', socket => {
     let timer = 0;
     let curPlayerID = null;
     let p = null;
+    let r = null;
     
     switch(nextState) {
       // If the next state is the suggestions state (first of the game) ...
@@ -336,7 +337,7 @@ io.on('connection', socket => {
       case 'Drawing':
         // create a random suggestion for each player
         // and send it to them
-        let r = rooms[room].suggestions
+        r = rooms[room].suggestions
 
         for(let player in rooms[room].players) {
           // generate a random suggestion
@@ -505,7 +506,7 @@ io.on('connection', socket => {
 
       // If the next state is the game over (aka "end of round") state ...
       case 'Over':
-        let r = rooms[room]
+        r = rooms[room]
 
         // send the score
         io.in(room).emit('final-scores', r.players)
