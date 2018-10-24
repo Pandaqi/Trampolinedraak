@@ -28,8 +28,7 @@ io.on('connection', socket => {
 
     // setup the room with the current id
     // create a dictionary to hold all the players (the ones with controllers)
-    // NOT NECESSARY: create a dictionary to hold all the monitors (the ones displaying the actual game)
-    // TO DO: of course, I will need more properties than this later on
+    // we don't need the monitors saved here
     rooms[id] = { 
       id: id, 
       players: {},
@@ -41,6 +40,9 @@ io.on('connection', socket => {
       guesses: {},
       guessVotes: [],
     }
+
+    // save the main room in the socket, for easy access later
+    socket.mainRoom = id
 
     // join the room (room is "automatically created" when someone joins it)
     socket.join(id);
@@ -115,6 +117,9 @@ io.on('connection', socket => {
       curRoom.players[socket.id] = playerObject
 
       io.in(code).emit('new-player', playerObject)
+
+      // save the main room on the socket object, for easy access later
+      socket.mainRoom = code
     }
 
     socket.emit('join-response', { success: success, vip: vip, err: err, rank: rank })
@@ -138,6 +143,8 @@ io.on('connection', socket => {
     //  => update audience/watcher count ??? (TO DO)
     if(success) {
       socket.join(code)
+
+      socket.mainRoom = code
     }
 
     socket.emit('watch-response', { success: success, err: err })
@@ -145,9 +152,7 @@ io.on('connection', socket => {
 
   // When any client disconnects ...
   socket.on('disconnect', state => {
-    let room = Object.keys(socket.rooms).filter(function(item) {
-        return item !== socket.id;
-    })[0]
+    let room = socket.mainRoom
 
     // the player wasn't in a room yet; no need for further checks
     if(room == undefined || room == null) {
@@ -177,14 +182,14 @@ io.on('connection', socket => {
   // When the game is ended/exited/destroyed
   socket.on('destroy-game', state => {
     // disconnect everyone
-    io.in(state.room).emit('force-disconnect', {})
+    io.in(socket.mainRoom).emit('force-disconnect', {})
 
     // room should be automatically destroyed when last player is removed
   })
 
   // When the VIP has decided to start the game ...
   socket.on('start-game', state => {
-    let room = state.roomCode;
+    let room = socket.mainRoom
     if(rooms[room] == undefined) {
       console.log("Error: Tried to start game in undefined room")
       return;
@@ -197,13 +202,18 @@ io.on('connection', socket => {
     gotoNextState(room, 'Suggestions', true)
   })
 
+  /*
+  Old code to get the current room:
+  let room = Object.keys(socket.rooms).filter(function(item) {
+        return item !== socket.id;
+    })[0]
+  */
+
   // When someone submits a drawing ...
   // TO DO: This assumes the user is only in a single room. (It automatically picks element 0.)
   // If this changes later, REMEMBER TO CHANGE THIS (and all other places we use this)
   socket.on('submit-drawing', state => {
-    let room = Object.keys(socket.rooms).filter(function(item) {
-        return item !== socket.id;
-    })[0]
+    let room = socket.mainRoom
 
     console.log('Received drawing in room ' + room);
 
@@ -235,13 +245,11 @@ io.on('connection', socket => {
 
   // When someone submits a suggestion ...
   socket.on('submit-suggestion', state => {
-    // add it to the list of suggestions
-    let room = Object.keys(socket.rooms).filter(function(item) {
-        return item !== socket.id;
-    })[0]
+    let room = socket.mainRoom
 
     console.log('Received suggestion "' + state.suggestion + '" in room ' + room)
 
+    // add it to the list of suggestions
     let r = rooms[room].suggestions
     let s = state.suggestion
 
@@ -264,9 +272,7 @@ io.on('connection', socket => {
 
   // When someone submits a guess (to the drawing shown onscreen) ...
   socket.on('submit-guess', state => {
-    let room = Object.keys(socket.rooms).filter(function(item) {
-        return item !== socket.id;
-    })[0]
+    let room = socket.mainRoom
 
     console.log('Received guess "' + state + '" in room ' + room)
 
@@ -284,9 +290,7 @@ io.on('connection', socket => {
 
   // When someone votes for a certain guess to be the correct one ...
   socket.on('vote-guess', state => {
-    let room = Object.keys(socket.rooms).filter(function(item) {
-        return item !== socket.id;
-    })[0]
+    let room = socket.mainRoom
 
     console.log('Received guess vote "' + state + '" in room ' + room)
 
@@ -302,9 +306,7 @@ io.on('connection', socket => {
   })
 
   socket.on('timer-complete', state => {
-    let room = Object.keys(socket.rooms).filter(function(item) {
-        return item !== socket.id;
-    })[0]
+    let room = socket.mainRoom
 
     let nextState = state.nextState
     let certain = false
@@ -482,6 +484,7 @@ io.on('connection', socket => {
               rooms[room].guesses[realTitle].whoGuessedIt.push(p.name)
             } else {
               // if the vote was incorrect, search whose title it was, give them points
+              // technically, one can vote for one's own incorrect drawing title, I don't see the need to prevent against such stupidity :p
               for(let key2 in rooms[room].players) {
                 let p2 = rooms[room].players[key2]
                 if(myVote == p2.drawingTitle) {

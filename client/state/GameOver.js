@@ -27,16 +27,12 @@ class GameOver extends Phaser.State {
     newItem.anchor.setTo(0.5, 0)
 
     let scores = serverInfo.finalScores
-
-    // sort from HIGHEST score to LOWEST score
-    scores.sort(function(a, b) { 
-        return a.score - b.score;
-    })
+    let keysSorted = Object.keys(scores).sort(function(a,b){return scores[b].score - scores[a].score })
 
     // display all players and their score
     let counter = 0
-    for(let key in scores) {
-      let p = scores[key]
+    for(let i= 0; i < keysSorted.length; i++ ) {
+      let p = scores[keysSorted[i]]
 
       style.fill = playerColors[p.rank]
       let text = gm.add.text(gm.width*0.5, 60 + counter*40, 'Player: ' + p.name + " | Score: " + p.score, style)

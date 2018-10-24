@@ -80,7 +80,7 @@ class ControllerWaiting extends Phaser.State {
         btn1.disabled = true;
 
         // send message to server that we want to start
-        socket.emit('start-game', { roomCode: serverInfo.roomCode })
+        socket.emit('start-game', {} )
         
         // we don't need to go to the next state; that happens automatically when the server responds with "okay! we start!"
       })

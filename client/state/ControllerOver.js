@@ -41,7 +41,7 @@ class ControllerOver extends Phaser.State {
       btn2.addEventListener('click', function(event) {
         // tell the server that we want to destroy the game
         // this disconnects everyone and destroys the room on the server
-        socket.emit('destroy-game', { room: serverInfo.roomCode })
+        socket.emit('destroy-game', {})
       })
       div.appendChild(btn2)
     }
