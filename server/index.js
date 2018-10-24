@@ -272,11 +272,11 @@ io.on('connection', socket => {
 
     // add guess to dictionary of guesses and save whose it was
     let name = rooms[room].players[socket.id].name
-    rooms[room].guesses[state.guess] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
+    rooms[room].guesses[state] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
 
     // check if all guesses are done (if so, immediately start next round)
     // the player who drew the picture, obviously, DOES NOT GUESS
-    let allGuessesDone = (rooms[room].guesses.length == (rooms[room].playerCount - 1))
+    let allGuessesDone = (Object.keys(rooms[room].guesses).length == (rooms[room].playerCount - 1))
     if(allGuessesDone) {
       gotoNextState(room, 'GuessingPick', true)
     }
@@ -417,6 +417,10 @@ io.on('connection', socket => {
 
       // If the next state is the one where we pick the correct guess from the game screen ...
       case 'GuessingPick':
+        // TO DO: We actually need to autofetch all guesses before we continue
+        // but not now, because we're still testing other stuff :p
+        certain = true
+
         // we should have a list of guesses now
         let guesses = rooms[room].guesses
 

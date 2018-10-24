@@ -39,7 +39,7 @@ class ControllerGuessing extends Phaser.State {
       btn1.innerHTML = 'Submit guess'
       btn1.addEventListener('click', function(event) {
         // send the guess to the server
-        socket.emit('submit-guess', { guess: inp1.value })
+        socket.emit('submit-guess', inp1.value)
 
         // Remove submit button (and input text)
         btn1.remove()
@@ -56,14 +56,13 @@ class ControllerGuessing extends Phaser.State {
     // save the list of guesses
     socket.on('return-guesses', data => {
       serverInfo.guesses = data
-
-      socket.off('return-guesses')
     })
 
     console.log("Controller Guessing state");
   }
 
   shutdown() {
+    serverInfo.socket.off('return-guesses')
   }
 
   update () {
