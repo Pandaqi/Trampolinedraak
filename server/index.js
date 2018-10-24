@@ -167,10 +167,19 @@ io.on('connection', socket => {
         delete rooms[room]
       } else {
         // Inform everyone of the change
+        // TO DO: Nobody's listening for this signal yet ...
         // NOTE: It sends the updated playerlist, so people need to figure out (clientside) who is gone and what to do with it
         io.in(room).emit('player-disconnected', players)
       }
     }
+  })
+
+  // When the game is ended/exited/destroyed
+  socket.on('destroy-game', state => {
+    // disconnect everyone
+    io.in(state.room).emit('force-disconnect', {})
+
+    // room should be automatically destroyed when last player is removed
   })
 
   // When the VIP has decided to start the game ...
@@ -395,7 +404,7 @@ io.on('connection', socket => {
           curPlayerID = rooms[room].playerOrder[curPointer]
           p = rooms[room].players[curPlayerID]
 
-          // send the next drawing
+          // send the next drawing (to all players in the room)
           io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID, lastDrawing: lastDrawing })
 
           // update the order pointer (so that the next time this function is called, we load the next drawing, instead of the same)
@@ -485,8 +494,6 @@ io.on('connection', socket => {
         // send each guess (including the correct title), who guessed it, and who wrote it
         io.in(room).emit('final-guess-results', rooms[room].guesses)
 
-        // also, already send the current scores
-
         // already wipe out this cycle
         rooms[room].guesses = {}
         rooms[room].guessVotes = []
@@ -494,6 +501,22 @@ io.on('connection', socket => {
         // and then we just wait for the monitor to reveal the results :p
         // no timer here; whenever the VIP feels like it, he can press a button on his device and continue to the next cycle
         timer = 0; 
+        break;
+
+      // If the next state is the game over (aka "end of round") state ...
+      case 'Over':
+        let r = rooms[room]
+
+        // send the score
+        io.in(room).emit('final-scores', r.players)
+
+        // wipe out this round
+        r.suggestions = { nouns: [], verbs: [], adjectives: [], adverbs: [] }
+        r.drawingsSubmitted = 0
+        r.playerOrder = []
+        r.orderPointer = 0
+
+        timer = 0;
         break;
     }
 

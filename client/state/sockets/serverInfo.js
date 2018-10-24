@@ -12,4 +12,5 @@ export const serverInfo = {
   drawing: null,
   guesses: null,
   finalGuessResults: null,
+  finalScores: null,
 }

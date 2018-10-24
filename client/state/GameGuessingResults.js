@@ -54,7 +54,15 @@ class GameGuessingResults extends Phaser.State {
       counter++;
     }
 
+    socket.on('final-scores', data => {
+      serverInfo.finalScores = data
+    })
+
     console.log("Game Guessing Results state")
+  }
+
+  shutdown() {
+    serverInfo.socket.off('final-scores')
   }
 
   update () {

@@ -13,7 +13,6 @@ class ControllerGuessingResults extends Phaser.State {
   create () {    
     let gm = this.game
     let socket = serverInfo.socket
-
     let div = document.getElementById("main-controller")
     let canvas = document.getElementById("canvas-container")
 

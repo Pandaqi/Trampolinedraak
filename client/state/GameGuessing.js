@@ -51,7 +51,7 @@ class GameGuessing extends Phaser.State {
   }
 
   shutdown () {
-    socket.off('return-guesses')
+    serverInfo.socket.off('return-guesses')
   }
 
   update () {

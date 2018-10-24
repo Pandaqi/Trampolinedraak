@@ -113,6 +113,12 @@ class ControllerWaiting extends Phaser.State {
       serverInfo.drawing = data
     })
 
+    // force disconnect (because game has been stopped/removed)
+    socket.on('force-disconnect', data => {
+      socket.disconnect(true)
+      window.location.reload(false)
+    })
+
     /***
      * END MAIN SOCKETS
      */
