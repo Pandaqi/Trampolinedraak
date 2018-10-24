@@ -35,7 +35,7 @@ class GameOver extends Phaser.State {
       let p = scores[keysSorted[i]]
 
       style.fill = playerColors[p.rank]
-      let text = gm.add.text(gm.width*0.5, 60 + counter*40, 'Player: ' + p.name + " | Score: " + p.score, style)
+      let text = gm.add.text(gm.width*0.5, 80 + counter*40, 'Player: ' + p.name + " | Score: " + p.score, style)
       text.anchor.setTo(0.5, 0.5)
 
       counter++

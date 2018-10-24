@@ -39,6 +39,7 @@ io.on('connection', socket => {
       orderPointer: 0,
       guesses: {},
       guessVotes: [],
+      curRound: 0,
     }
 
     // save the main room in the socket, for easy access later
@@ -174,7 +175,7 @@ io.on('connection', socket => {
         // Inform everyone of the change
         // TO DO: Nobody's listening for this signal yet ...
         // NOTE: It sends the updated playerlist, so people need to figure out (clientside) who is gone and what to do with it
-        io.in(room).emit('player-disconnected', players)
+        io.in(room).emit('player-disconnected', rooms[room].players)
       }
     }
   })
@@ -413,7 +414,7 @@ io.on('connection', socket => {
           p = rooms[room].players[curPlayerID]
 
           // send the next drawing (to all players in the room)
-          io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID, lastDrawing: lastDrawing })
+          io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name + "Round" + rooms[room].curRound, id: curPlayerID, lastDrawing: lastDrawing })
         }
 
         timer = 60;
@@ -532,6 +533,8 @@ io.on('connection', socket => {
         r.drawingsSubmitted = 0
         r.playerOrder = []
         r.orderPointer = 0
+
+        rooms[room].curRound++;
 
         timer = 0;
         break;
