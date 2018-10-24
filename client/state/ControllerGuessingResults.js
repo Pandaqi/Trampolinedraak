@@ -48,8 +48,11 @@ class ControllerGuessingResults extends Phaser.State {
         })
         div.appendChild(btn1)
       }
-
-    }
+    } else {
+        let p1 = document.createElement("p")
+        p1.innerHTML = "That was it for this round! Please wait for the VIP to start the next round.";
+        div.appendChild(p1)
+    } 
 
     console.log("Controller Guessing Results state");
   }

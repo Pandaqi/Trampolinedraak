@@ -38,16 +38,16 @@ class GameGuessingResults extends Phaser.State {
       style = { font: "bold 32px Arial", fill: "#333"};
       if(fg.correct) { style.fill = '#237a23' }
 
-      let text = gm.add.text(gm.width*0.5, 50 + counter*80, key, style)
+      let text = gm.add.text(gm.width*0.5, 60 + counter*80, key, style)
       text.anchor.setTo(0.5, 0.5)
 
       style = { font: "16px Arial", fill: "#333"};
-      let text2 = gm.add.text(gm.width*0.5, 50 + counter*80 + 32, 'Guessed by: ' + fg[key].whoGuessedIt, style)
+      let text2 = gm.add.text(gm.width*0.5, 60 + counter*80 + 32, 'Guessed by: ' + fg[key].whoGuessedIt.join(", "), style)
       text2.anchor.setTo(0.5, 0.5)
 
       if(!fg.correct) {
         style = { font: "16px Arial", fill: "#333"};
-        let text3 = gm.add.text(gm.width*0.5, 50 + counter*80 + 50, 'Written by: ' + fg[key].name, style)
+        let text3 = gm.add.text(gm.width*0.5, 60 + counter*80 + 50, 'Written by: ' + fg[key].name, style)
         text3.anchor.setTo(0.5, 0.5)
       }
 

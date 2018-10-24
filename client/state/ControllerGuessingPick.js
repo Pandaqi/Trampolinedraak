@@ -37,12 +37,13 @@ class ControllerGuessingPick extends Phaser.State {
       for(let i = 0; i < guesses.length; i++) {
         // display button for each guess
         let btn1 = document.createElement("button")
-        btn1.innerHTML = guesses[i]
-        btn1.value = guesses[i]
+        let theGuess = guesses[i]
+        btn1.innerHTML = theGuess
+        btn1.value = theGuess
 
         btn1.addEventListener('click', function(event) {
           // send the guess to the server
-          socket.emit('vote-guess', { guess: this.value })
+          socket.emit('vote-guess', theGuess)
 
           // Inform user that it was succesful
           p1.innerHTML = "Really? You think it's that?!"

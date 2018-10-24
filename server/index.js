@@ -268,7 +268,7 @@ io.on('connection', socket => {
         return item !== socket.id;
     })[0]
 
-    console.log('Received guess "' + state.guess + '" in room ' + room)
+    console.log('Received guess "' + state + '" in room ' + room)
 
     // add guess to dictionary of guesses and save whose it was
     let name = rooms[room].players[socket.id].name
@@ -288,11 +288,11 @@ io.on('connection', socket => {
         return item !== socket.id;
     })[0]
 
-    console.log('Received guess vote "' + state.guess + '" in room ' + room)
+    console.log('Received guess vote "' + state + '" in room ' + room)
 
     // save the vote
-    rooms[room].players[socket.id].guessVote = state.guess
-    rooms[room].guessVotes.push(state.guess)
+    rooms[room].players[socket.id].guessVote = state
+    rooms[room].guessVotes.push(state)
 
     // if all votes are done, immediately start results
     let allVotesDone = (rooms[room].guessVotes.length == (rooms[room].playerCount - 1))
@@ -322,6 +322,11 @@ io.on('connection', socket => {
     let curPlayerID = null;
     let p = null;
     let r = null;
+
+    if(rooms[room] == undefined) {
+      console.log("Error: tried to switch states in a non-existent room")
+      return;
+    }
     
     switch(nextState) {
       // If the next state is the suggestions state (first of the game) ...
@@ -407,9 +412,6 @@ io.on('connection', socket => {
 
           // send the next drawing (to all players in the room)
           io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name, id: curPlayerID, lastDrawing: lastDrawing })
-
-          // update the order pointer (so that the next time this function is called, we load the next drawing, instead of the same)
-          curPointer++;
         }
 
         timer = 60;
@@ -446,6 +448,10 @@ io.on('connection', socket => {
 
       // If the next state shows the results from this guessing round ...
       case 'GuessingResults':
+        // we can't autofetch the guess votes, because there is no default or single thing to get
+        // so just always be certain
+        certain = true;
+
         // already change the score
         // If X guesses the correct title, X gets 1000 points
         // If X guesses the title of Y, Y gets 750 points
@@ -493,7 +499,7 @@ io.on('connection', socket => {
         // if all players were correct, subtract the points again!
         // (of course, the player who made the drawing doesn't vote)
         if(countCorrect == (rooms[room].playerCount - 1)) {
-          rooms[room].players[curPlayerID].score -= (playerCount + 2)*1000;
+          rooms[room].players[curPlayerID].score -= (rooms[room].playerCount + 2)*1000;
         }
 
         // send each guess (including the correct title), who guessed it, and who wrote it
@@ -502,6 +508,9 @@ io.on('connection', socket => {
         // already wipe out this cycle
         rooms[room].guesses = {}
         rooms[room].guessVotes = []
+
+        // update the order pointer (so that the next time the cycle is called, we load the next drawing, instead of the same)
+        rooms[room].orderPointer++;
 
         // and then we just wait for the monitor to reveal the results :p
         // no timer here; whenever the VIP feels like it, he can press a button on his device and continue to the next cycle
