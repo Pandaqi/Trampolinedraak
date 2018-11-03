@@ -109,6 +109,7 @@ class Menu extends Phaser.State {
     document.getElementById('watchRoomBtn').onclick = function() {
       // disable the button
       let btn = this;
+      if(btn.disabled) { return; }
       btn.disabled = true;
 
       // fetches the inputs (which will be handed to the server on first connection)
@@ -130,10 +131,14 @@ class Menu extends Phaser.State {
       socket.on('watch-response', data => {
         if(data.success) {
           // remove overlay
-          document.getElementById("overlay").remove();
+          document.getElementById("main").style.display = 'none'
+
+          // save the fact that we're watching the game
+          // this is used to notify the user we're loading the game, AND to load the correct settings and all
+          serverInfo.gameLoading = true
 
           // Starts the "monitor" state
-          gm.state.start('Game');
+          gm.state.start('GameWaiting');
         } else {
           document.getElementById("err-message").innerHTML = data.err
 

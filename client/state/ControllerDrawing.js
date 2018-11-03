@@ -29,7 +29,7 @@ class ControllerDrawing extends Phaser.State {
     div.appendChild(canvas)
 
     // make canvas the correct size
-    let desiredWidth = document.getElementById('main-controller').clientWidth
+    let desiredWidth = document.getElementById('main-controller').clientWidth - 50
     let desiredHeight = desiredWidth * 1.3
     gm.scale.setGameSize(desiredWidth, desiredHeight)
 
@@ -100,8 +100,7 @@ class ControllerDrawing extends Phaser.State {
       this.bmd.lastPoint = null;      
     }      
 
-    if (this.game.input.activePointer.isDown) {        
-      console.log('down');        
+    if (this.game.input.activePointer.isDown) {              
       this.bmd.isDragging = true;        
       this.bmd.ctx.beginPath();                        
       var newPoint = new Phaser.Point(this.game.input.x, this.game.input.y);        

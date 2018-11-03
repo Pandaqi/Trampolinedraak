@@ -40,13 +40,15 @@ io.on('connection', socket => {
       guesses: {},
       guessVotes: [],
       curRound: 0,
+      gameState: "Waiting"
+      timerEnd: null,
     }
 
     // save the main room in the socket, for easy access later
     socket.mainRoom = id
 
     // join the room (room is "automatically created" when someone joins it)
-    socket.join(id);
+    socket.join(id + "-Monitor");
 
     // beam back the room code to the "game monitor"
     socket.emit('room-created', {roomCode: id})
@@ -96,7 +98,7 @@ io.on('connection', socket => {
     let vip = false
     let rank = -1
     if(success) {
-      socket.join(code)
+      socket.join(code + "-Controller")
 
       rank = Object.keys(curRoom.players).length
 
@@ -142,9 +144,9 @@ io.on('connection', socket => {
     // if watch request was succesful ...
     //  => add the watcher (just join the room)
     //  => update audience/watcher count ??? (TO DO)
+    //  => determine current game state, send that to the watch room ??? (TO DO)
     if(success) {
-      socket.join(code)
-
+      socket.join(code + "-Monitor")
       socket.mainRoom = code
     }
 
@@ -160,9 +162,9 @@ io.on('connection', socket => {
       return;
     }
 
-    if(rooms[room].players[socket.id] == undefined) {
+    if(!(socket.id in rooms[room].players)) {
       // if the disconnect was from a MONITOR, no probs
-      // The game is still going strong, one just needs to "view room" again.
+      // The game is still going strong, one just needs to "watch room" again.
     } else {
       // If the disconnect is from a player, VERY MUCH PROBLEMOS
       // Delete the player
@@ -172,10 +174,10 @@ io.on('connection', socket => {
       if(Object.keys(rooms[room].players).length < 1) {
         delete rooms[room]
       } else {
-        // Inform everyone of the change
+        // Inform all monitors of the change
         // TO DO: Nobody's listening for this signal yet ...
-        // NOTE: It sends the updated playerlist, so people need to figure out (clientside) who is gone and what to do with it
-        io.in(room).emit('player-disconnected', rooms[room].players)
+        // NOTE: It only sends the player that left, to save internet bandwidth
+        io.in(room + "-Monitor").emit('player-disconnected', rooms[room].players[socket.id])
       }
     }
   })
@@ -185,7 +187,39 @@ io.on('connection', socket => {
     // disconnect everyone
     io.in(socket.mainRoom).emit('force-disconnect', {})
 
-    // room should be automatically destroyed when last player is removed
+    // room should be automatically destroyed when last player is removed (see "disconnect" eventListener)
+  })
+
+  socket.on('game-loading-finished', state => {
+    // get room
+    let room = socket.mainRoom
+
+    let obj = {}
+
+    // Determine the current TIMER of the game
+    if(rooms[room].timerEnd === null) {
+      // If there is no set timer end time, the current round must be timerless, so just return null
+      obj.timer = null
+    } else {
+      // Otherwise, calculate the time left on the timer
+      // Subtraction gives the difference in milliseconds, so multiply by 1000 (because our timer works in seconds)
+      obj.timer = (rooms[room].timerEnd - new Date())*1000
+    }
+
+    // Determine the current STATE of the game
+    let nextState = rooms[room].gameState
+
+    // Based on the state, determine which INFO the new monitor needs
+    // We COULD resend all signals, but that would probably be a waste of bandwidth (and would introduce a timing issue when the signal arrives between states)
+
+    // TO DO:
+    // Determine the information that the monitor needs (and supply it in the most efficient way)
+    //  => For example, the monitor probably only needs to know which players have already finished drawing, nothing else
+    // Determine the state that the monitor should move to
+    // SEND IT!
+
+    // send the whole room back to the client
+    socket.emit('game-loading-update', obj)
   })
 
   // When the VIP has decided to start the game ...
@@ -211,8 +245,6 @@ io.on('connection', socket => {
   */
 
   // When someone submits a drawing ...
-  // TO DO: This assumes the user is only in a single room. (It automatically picks element 0.)
-  // If this changes later, REMEMBER TO CHANGE THIS (and all other places we use this)
   socket.on('submit-drawing', state => {
     let room = socket.mainRoom
 
@@ -223,14 +255,14 @@ io.on('connection', socket => {
       rooms[room].players[socket.id].profile = state.dataURI
 
       // update the waiting screen
-      io.in(room).emit('player-updated-profile', rooms[room].players[socket.id])
+      io.in(room + "-Monitor").emit('player-updated-profile', rooms[room].players[socket.id])
     } else if (state.type == "ingame") {
       // save the drawing for this player
       rooms[room].players[socket.id].drawing = state.dataURI
 
       // notify the game monitors
       // (only send the player that is done, not the whole playerlist)
-      io.in(room).emit('player-done', rooms[room].players[socket.id])
+      io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
 
       // update drawings counter
       rooms[room].drawingsSubmitted++;
@@ -262,7 +294,7 @@ io.on('connection', socket => {
 
     // notify the game monitors
     // (only send the player that is done, not the whole playerlist)
-    io.in(room).emit('player-done', rooms[room].players[socket.id])
+    io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
 
     // if everyone has submitted suggestions, start the game immediately!
     let allSuggestionsDone = (r.nouns.length == rooms[room].playerCount)
@@ -277,9 +309,20 @@ io.on('connection', socket => {
 
     console.log('Received guess "' + state + '" in room ' + room)
 
+    // check if guess already exists
+    // if so, return that info to the player
+    // he may reguess
+    if(state in rooms[room].guesses) {
+      socket.emit('guess-already-exists', {})
+      return;
+    }
+
     // add guess to dictionary of guesses and save whose it was
     let name = rooms[room].players[socket.id].name
     rooms[room].guesses[state] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
+
+    // notify the game monitors
+    io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
 
     // check if all guesses are done (if so, immediately start next round)
     // the player who drew the picture, obviously, DOES NOT GUESS
@@ -298,6 +341,9 @@ io.on('connection', socket => {
     // save the vote
     rooms[room].players[socket.id].guessVote = state
     rooms[room].guessVotes.push(state)
+
+    // notify the game monitors
+    io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
 
     // if all votes are done, immediately start results
     let allVotesDone = (rooms[room].guessVotes.length == (rooms[room].playerCount - 1))
@@ -335,7 +381,7 @@ io.on('connection', socket => {
       // If the next state is the suggestions state (first of the game) ...
       case 'Suggestions':
         // inform (only the monitors) of some extra info, such as player count
-        io.in(room).emit('setup-info', rooms[room].playerCount)
+        io.in(room + "-Monitor").emit('setup-info', rooms[room].playerCount)
 
         // just set the timer
         timer = 60;
@@ -348,16 +394,7 @@ io.on('connection', socket => {
         r = rooms[room].suggestions
 
         for(let player in rooms[room].players) {
-          // generate a random suggestion
-          let title = r.adjectives[Math.floor(Math.random()*r.adjectives.length)] + " " + r.nouns[Math.floor(Math.random()*r.nouns.length)];
-
-          if(Math.random() >= 0.25) {
-            title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
-
-            if(Math.random() >= 0.25) {
-              title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
-            }
-          }
+          let title = generateSuggestion(rooms[room])
 
           // save it
           rooms[room].players[player].drawingTitle = title
@@ -379,7 +416,7 @@ io.on('connection', socket => {
             certain = true;
           } else {
             // Ping all users to make sure you collect their drawings
-            io.in(room).emit('fetch-drawing', {})
+            io.in(room + "-Controller").emit('fetch-drawing', {})
 
             // In the submit-drawing signal, it already checks if all drawings have been submitted, and starts the next state
             // This time, after the autofetch, it IS certain
@@ -413,8 +450,8 @@ io.on('connection', socket => {
           curPlayerID = rooms[room].playerOrder[curPointer]
           p = rooms[room].players[curPlayerID]
 
-          // send the next drawing (to all players in the room)
-          io.in(room).emit('return-drawing', { dataURI: p.drawing, name: p.name + "Round" + rooms[room].curRound, id: curPlayerID, lastDrawing: lastDrawing })
+          // send the next drawing (to all monitors in the room)
+          io.in(room + "-Monitor").emit('return-drawing', { dataURI: p.drawing, name: p.name + "Round" + rooms[room].curRound, id: curPlayerID, lastDrawing: lastDrawing })
         }
 
         timer = 60;
@@ -435,6 +472,17 @@ io.on('connection', socket => {
         p = rooms[room].players[curPlayerID]
         guesses[p.drawingTitle] = { player: curPlayerID, name: p.name, whoGuessedIt: [], correct: true }
 
+        // add 4 random computer titles
+        for(let i = 0; i < 4; i++) {
+          // generate a random suggestion
+          let title = generateSuggestion(rooms[room])
+
+          // save it (if it doesn't already exist)
+          if(!(state in guesses)) {
+            guesses[state] = { player: 0, name: "computer", whoGuessedIt: [], correct: false }
+          }
+        }
+
         // shuffle them
         let guessKeys = Object.keys(guesses)
         for (let i = guessKeys.length - 1; i > 0; i--) {
@@ -444,7 +492,8 @@ io.on('connection', socket => {
 
         // throw them back (to both monitor and controller)
         // to save internet (and computational power), just send the array immediately
-        io.in(room).emit('return-guesses', guessKeys)
+        io.in(room + "-Monitor").emit('return-guesses', guessKeys)
+        io.in(room + "-Controller").emit('return-guesses', guessKeys)
 
         timer = 60;
         break;
@@ -507,7 +556,7 @@ io.on('connection', socket => {
         }
 
         // send each guess (including the correct title), who guessed it, and who wrote it
-        io.in(room).emit('final-guess-results', rooms[room].guesses)
+        io.in(room + "-Monitor").emit('final-guess-results', rooms[room].guesses)
 
         // already wipe out this cycle
         rooms[room].guesses = {}
@@ -526,7 +575,7 @@ io.on('connection', socket => {
         r = rooms[room]
 
         // send the score
-        io.in(room).emit('final-scores', r.players)
+        io.in(room + "-Monitor").emit('final-scores', r.players)
 
         // wipe out this round
         r.suggestions = { nouns: [], verbs: [], adjectives: [], adverbs: [] }
@@ -540,8 +589,48 @@ io.on('connection', socket => {
         break;
     }
 
+    // calculate when the timer should end (on the server)
+    // this is only used to create the "watch room" function (where people might drop in at any time)
+    if(timer == 0) {
+      rooms[room].timerEnd = null
+    } else {
+      rooms[room].timerEnd = new Date(new Date() + timer*1000)  
+    }
+
+    // if we're certain that the next state should start, notify both Monitors and Controllers
     if(certain) {
-      io.in(room).emit('next-state', { nextState: nextState, timer: timer })
+      rooms[room].gameState = nextState
+      io.in(room + "-Monitor").emit('next-state', { nextState: nextState, timer: timer })
+      io.in(room + "-Controller").emit('next-state', { nextState: nextState, timer: timer })
     }
   }
 })
+
+// @parameter r => the player's room 
+function generateSuggestion(r) {
+  // The order is: ADJECTIVE + NOUN + VERB + ADVERB
+  let title = ""
+
+  // There can be multiple adjectives (but there doesn't need to be one)
+  // The maximum is 4 (we don't want an infinite loop, nor too many adjectives)
+  let counter = 0
+  while(Math.random() >= 0.25) {
+    title += " " + r.adjectives[Math.floor(Math.random()*r.adjectives.length)]
+    counter++
+    if(counter >= 4) {
+      break;
+    }
+  }
+
+  title += " " + r.nouns[Math.floor(Math.random()*r.nouns.length)]
+
+  if(Math.random() >= 0.25) {
+    title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
+  }
+
+  if(Math.random() >= 0.25) {
+    title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+  }
+
+  return title
+}

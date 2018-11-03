@@ -41,6 +41,18 @@ class GameWaiting extends Phaser.State {
     var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, style);
     text.anchor.setTo(0.5, 0)
 
+    if(serverInfo.gameLoading) {
+      // if the room is still loading ("room watching") ... 
+      let style2 = { font: "bold 32px Arial", fill: "#666"}
+      let text2 = gm.add.text(gm.width*0.5, 60, "Please wait while we load the game", style2);
+      text2.anchor.setTo(0.5, 0)
+    } else {
+      // if the room is loaded and we're waiting for players to join ...
+      let style2 = { font: "bold 32px Arial", fill: "#666"}
+      let text2 = gm.add.text(gm.width*0.5, 60, "Players can now join the game!", style2);
+      text2.anchor.setTo(0.5, 0)
+    }
+
     let socket = serverInfo.socket
 
     socket.on('new-player', data => {
@@ -49,7 +61,7 @@ class GameWaiting extends Phaser.State {
 
       style = { font: "bold 32px Arial", fill: playerColors[data.rank]};
       let x = gm.width*0.5
-      let y = 100 + data.rank*60
+      let y = 120 + data.rank*60
       let newItem = gm.add.text(x, y, data.name, style);
       newItem.anchor.setTo(0, 0.5)
     })
@@ -60,7 +72,7 @@ class GameWaiting extends Phaser.State {
         let imageName = 'profileImage' + data.name // creates unique name by appending the username
 
         let x = gm.width*0.5
-        let y = 100 + data.rank*60
+        let y = 120 + data.rank*60
 
         dynamicLoadImage(gm, {x: (x - 100), y: y }, { width:60, height:78 }, imageName, dataURI)
       }
@@ -117,6 +129,23 @@ class GameWaiting extends Phaser.State {
     /***
      * END MAIN SOCKETS
      */
+
+    // if we were loading the game, inform the server that is now done!
+    // The server should calculate the current game state => send it back to this monitor
+    // we listen for this information => save it in serverInfo => move to the correct state
+    if(serverInfo.gameLoading) {
+      // this informs the server we're ready to receive info
+      socket.emit('game-loading-finished', {})
+
+      // this sets up a listener to receive the game state
+      socket.on('game-loading-update', data => {
+        // it IS possible that, while waiting for the game info, the game changes
+        // We do not really need to check for this situation. 
+        // The game info should be the latest version, and it's not a problem if a state "reloads" (it just asks a little more computational power)
+
+        
+      })
+    }
 
     console.log("Game waiting state")
   }

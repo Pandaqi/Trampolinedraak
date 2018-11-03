@@ -27,7 +27,9 @@ class ControllerWaiting extends Phaser.State {
     div.appendChild(canvas)
 
     // make canvas the correct size
-    let desiredWidth = document.getElementById('main-controller').clientWidth
+    // I reduce some of the width to leave some space on the sides, and make sure the canvas fits
+    // 60 is just a random number that works (scaling with e.g. *0.9 is a bad idea as it leaves inconsistent sizes)
+    let desiredWidth = document.getElementById('main-controller').clientWidth - 50
     let desiredHeight = desiredWidth * 1.3
     gm.scale.setGameSize(desiredWidth, desiredHeight)
 
@@ -137,8 +139,7 @@ class ControllerWaiting extends Phaser.State {
       this.bmd.lastPoint = null;      
     }      
 
-    if (this.game.input.activePointer.isDown) {        
-      console.log('down');        
+    if (this.game.input.activePointer.isDown) {            
       this.bmd.isDragging = true;        
       this.bmd.ctx.beginPath();                        
       var newPoint = new Phaser.Point(this.game.input.x, this.game.input.y);        

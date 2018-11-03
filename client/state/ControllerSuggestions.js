@@ -20,12 +20,12 @@ class ControllerSuggestions extends Phaser.State {
 
     // THIS IS THE CODE FOR THE "GIVE SUGGESTIONS"-state only
     let p1 = document.createElement("p")
-    p1.innerHTML = "Please give me a noun, verb, adjective and adverb (in that order)"
+    p1.innerHTML = "Please give me a noun, verb, adjective and adverbial clause (in that order)"
     div.appendChild(p1)
 
     let inp1 = document.createElement("input")
     inp1.type = "text";
-    inp1.placeholder = "noun (e.g. elephant)"
+    inp1.placeholder = "noun (e.g. elephant, tables, etc.)"
     div.appendChild(inp1)
 
     let inp2 = document.createElement("input")
@@ -40,7 +40,7 @@ class ControllerSuggestions extends Phaser.State {
 
     let inp4 = document.createElement("input")
     inp4.type = "text";
-    inp4.placeholder = "adverb (e.g. carefully)"
+    inp4.placeholder = "adverb (e.g. carefully, to the beach, while sleeping, etc.)"
     div.appendChild(inp4)
 
     let btn1 = document.createElement("button")
@@ -56,7 +56,8 @@ class ControllerSuggestions extends Phaser.State {
       }
 
       // send the suggestion to the server 
-      socket.emit('submit-suggestion', { suggestion: sug })
+      // always make the suggestions completely lowercase (otherwise you often know the correct answer by punctuation)
+      socket.emit('submit-suggestion', { suggestion: sug.toLowerCase() })
 
       inp1.remove();
       inp2.remove();

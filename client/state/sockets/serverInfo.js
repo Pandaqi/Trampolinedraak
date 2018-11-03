@@ -13,4 +13,5 @@ export const serverInfo = {
   guesses: null,
   finalGuessResults: null,
   finalScores: null,
+  gameLoading: false,
 }
