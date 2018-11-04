@@ -2,6 +2,7 @@ import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
+import loadWatchRoom from './sockets/watchRoomModule'
 
 /**
  * GAME DRAWING
@@ -30,6 +31,8 @@ class GameDrawing extends Phaser.State {
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
     this.timer = serverInfo.timer
+
+    loadWatchRoom(socket, serverInfo)
 
     console.log("Game Drawing state")
   }

@@ -1,6 +1,7 @@
 import { serverInfo } from './sockets/serverInfo'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
+import loadWatchRoom from './sockets/watchRoomModule'
 
 /**
  * GAME SUGGESTIONS
@@ -29,6 +30,8 @@ class GameSuggestions extends Phaser.State {
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
     this.timer = serverInfo.timer
+
+    loadWatchRoom(socket, serverInfo)
 
     console.log("Game Suggestions state")
   }

@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import loadMainSockets from './sockets/mainSocketsGame'
 
 class Menu extends Phaser.State {
   constructor () {
@@ -40,6 +41,7 @@ class Menu extends Phaser.State {
 
       // Creates game room on server
       socket.on('connect', () => {
+        document.getElementById("err-message").innerHTML = 'Creating room ...'
         socket.emit('new-room', {})
       })
 
@@ -76,6 +78,8 @@ class Menu extends Phaser.State {
       let socket = serverInfo.socket
 
       socket.on('connect', () => {
+        document.getElementById("err-message").innerHTML = 'Joining ...'
+
         socket.emit('join-room', { 
           roomCode: roomCode, 
           userName: userName 
@@ -121,6 +125,8 @@ class Menu extends Phaser.State {
       let socket = serverInfo.socket
 
       socket.on('connect', () => {
+        document.getElementById("err-message").innerHTML = 'Loading room ...'
+
         socket.emit('watch-room', { 
           roomCode: roomCode, 
         })
@@ -133,12 +139,21 @@ class Menu extends Phaser.State {
           // remove overlay
           document.getElementById("main").style.display = 'none'
 
-          // save the fact that we're watching the game
-          // this is used to notify the user we're loading the game, AND to load the correct settings and all
+          // load the main sockets
+          loadMainSockets(socket, gm, serverInfo)
+
+          // set the timer
+          serverInfo.timer = data.timer
+
+          // load the info (set the given variable on the serverInfo object)
+          // TO DO: This means all those custom functions later on ('return-guesses', 'final-scores', etc.) can also be greatly simplified ...
+          let preSignal = data.preSignal
+          serverInfo[preSignal[0]] = preSignal[1]
+
           serverInfo.gameLoading = true
 
-          // Starts the "monitor" state
-          gm.state.start('GameWaiting');
+          // go to the correct state
+          gm.state.start('Game' + data.gameState);
         } else {
           document.getElementById("err-message").innerHTML = data.err
 

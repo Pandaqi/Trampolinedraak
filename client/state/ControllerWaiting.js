@@ -1,5 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
 import { playerColors } from './utils/colors'
+import loadMainSockets from './sockets/mainSocketsController'
 
 class ControllerWaiting extends Phaser.State {
   constructor () {
@@ -89,41 +90,7 @@ class ControllerWaiting extends Phaser.State {
       div.appendChild(btn1)
     }
 
-    /***
-     * MAIN SOCKETS
-     * Some sockets are persistent across states
-     * They are defined ONCE here, in the waiting area, and uses throughout the game
-     */
-
-    socket.on('next-state', data => {
-      // set the timer
-      serverInfo.timer = data.timer
-
-      // save the canvas (otherwise it is also removed when the GUI is removed)
-      canvas.style.display = 'none'
-      document.body.appendChild(canvas)
-
-      // clear the GUI
-      div.innerHTML = '';
-
-      // start the next state
-      gm.state.start('Controller' + data.nextState)
-    })
-
-    // save whose drawing is displayed on screen, so we know if this controller is the owner or not
-    socket.on('return-drawing', data => {
-      serverInfo.drawing = data
-    })
-
-    // force disconnect (because game has been stopped/removed)
-    socket.on('force-disconnect', data => {
-      socket.disconnect(true)
-      window.location.reload(false)
-    })
-
-    /***
-     * END MAIN SOCKETS
-     */
+    loadMainSockets(socket, gm, serverInfo)
 
     console.log("Controller Waiting state");
   }

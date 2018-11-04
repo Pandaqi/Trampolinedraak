@@ -2,6 +2,7 @@ import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from  './drawing/dynamicLoadImage'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
+import loadWatchRoom from './sockets/watchRoomModule'
 
 /**
  * GAME GUESSING
@@ -47,6 +48,8 @@ class GameGuessing extends Phaser.State {
       serverInfo.guesses = data
     })
 
+    loadWatchRoom(socket, serverInfo)
+    
     console.log("Game Guessing state")
   }
 

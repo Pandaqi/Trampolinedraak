@@ -2,6 +2,7 @@ import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
+import loadWatchRoom from './sockets/watchRoomModule'
 
 /**
  * GAME GUESSING PICK
@@ -56,6 +57,8 @@ class GameGuessingPick extends Phaser.State {
     socket.on('final-guess-results', data => {
       serverInfo.finalGuessResults = data
     })
+
+    loadWatchRoom(socket, serverInfo)
     
     console.log("Game Guessing Pick state")
   }

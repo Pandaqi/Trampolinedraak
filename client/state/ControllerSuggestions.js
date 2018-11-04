@@ -46,7 +46,7 @@ class ControllerSuggestions extends Phaser.State {
     let btn1 = document.createElement("button")
     btn1.innerHTML = 'Submit'
     btn1.addEventListener('click', function(event) {
-      let sug = [inp1.value, inp2.value, inp3.value, inp4.value]
+      let sug = [inp1.value.toLowerCase(), inp2.value.toLowerCase(), inp3.value.toLowerCase(), inp4.value.toLowerCase()]
 
       // empty suggestions are not welcome!
       for(let i = 0; i < sug.length; i++) {
@@ -57,7 +57,7 @@ class ControllerSuggestions extends Phaser.State {
 
       // send the suggestion to the server 
       // always make the suggestions completely lowercase (otherwise you often know the correct answer by punctuation)
-      socket.emit('submit-suggestion', { suggestion: sug.toLowerCase() })
+      socket.emit('submit-suggestion', { suggestion: sug })
 
       inp1.remove();
       inp2.remove();

@@ -1,5 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
 import { playerColors } from './utils/colors'
+import loadWatchRoom from './sockets/watchRoomModule'
 
 /**
  * GAME OVER
@@ -40,6 +41,8 @@ class GameOver extends Phaser.State {
 
       counter++
     }
+
+    loadWatchRoom(socket, serverInfo)
 
     console.log("Game Over state")
   }

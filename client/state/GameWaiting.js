@@ -11,6 +11,8 @@ import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { playerColors } from './utils/colors'
 import loadPlayerVisuals from './drawing/loadPlayerVisuals'
+import loadMainSockets from './sockets/mainSocketsGame'
+import loadWatchRoom from './sockets/watchRoomModule'
 
 
 class GameWaiting extends Phaser.State {
@@ -41,24 +43,14 @@ class GameWaiting extends Phaser.State {
     var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, style);
     text.anchor.setTo(0.5, 0)
 
-    if(serverInfo.gameLoading) {
-      // if the room is still loading ("room watching") ... 
-      let style2 = { font: "bold 32px Arial", fill: "#666"}
-      let text2 = gm.add.text(gm.width*0.5, 60, "Please wait while we load the game", style2);
-      text2.anchor.setTo(0.5, 0)
-    } else {
-      // if the room is loaded and we're waiting for players to join ...
-      let style2 = { font: "bold 32px Arial", fill: "#666"}
-      let text2 = gm.add.text(gm.width*0.5, 60, "Players can now join the game!", style2);
-      text2.anchor.setTo(0.5, 0)
-    }
+    // explain that we're waiting for people to join
+    let style2 = { font: "bold 32px Arial", fill: "#666"}
+    let text2 = gm.add.text(gm.width*0.5, 60, "Players can now join the game!", style2);
+    text2.anchor.setTo(0.5, 0)
 
     let socket = serverInfo.socket
 
     socket.on('new-player', data => {
-      console.log(playerColors)
-      console.log(data.rank)
-
       style = { font: "bold 32px Arial", fill: playerColors[data.rank]};
       let x = gm.width*0.5
       let y = 120 + data.rank*60
@@ -88,64 +80,8 @@ class GameWaiting extends Phaser.State {
       serverInfo.playerCount = data
     })
 
-    /***
-     * MAIN SOCKETS
-     * Some sockets are persistent across states
-     * They are defined ONCE here, in the waiting area, and used throughout the game
-     */
-
-    // if a player is done -> show it by loading the player name + profile onscreen
-    // do so in a circle (it works the best for any screen size AND any player count)
-    socket.on('player-done', data => {
-      console.log("Player done (" + data.name + ")")
-
-      let angle = (data.rank / serverInfo.playerCount) * 2 * Math.PI
-      let maxXHeight = gm.height*0.5/1.3;
-      let maxXWidth = gm.width*0.5;
-      let finalImageWidth = Math.min(maxXHeight, maxXWidth) * 0.8 // to make sure everything's visible and not too spaced out
-
-      loadPlayerVisuals(gm, gm.width*0.5 + Math.cos(angle)*finalImageWidth, gm.height*0.5 + Math.sin(angle)*finalImageWidth*1.3, playerColors[data.rank], data)
-    })
-
-    // go to next state
-    // the server gives us (within data) the name of this next state
-    socket.on('next-state', data => {
-      serverInfo.timer = data.timer
-      gm.state.start('Game' + data.nextState)
-    })
-
-    // get a drawing from the server, which starts the next Guess-Pick-Result cycle
-    // we could turn it on/off at start/end of cycle, but this seems easier and cleaner
-    socket.on('return-drawing', data => {
-      serverInfo.drawing = data
-    })
-
-    // force disconnect (because game has been stopped/removed)
-    socket.on('force-disconnect', data => {
-      socket.disconnect(true)
-      window.location.reload(false)
-    })
-
-    /***
-     * END MAIN SOCKETS
-     */
-
-    // if we were loading the game, inform the server that is now done!
-    // The server should calculate the current game state => send it back to this monitor
-    // we listen for this information => save it in serverInfo => move to the correct state
-    if(serverInfo.gameLoading) {
-      // this informs the server we're ready to receive info
-      socket.emit('game-loading-finished', {})
-
-      // this sets up a listener to receive the game state
-      socket.on('game-loading-update', data => {
-        // it IS possible that, while waiting for the game info, the game changes
-        // We do not really need to check for this situation. 
-        // The game info should be the latest version, and it's not a problem if a state "reloads" (it just asks a little more computational power)
-
-        
-      })
-    }
+    loadMainSockets(socket, gm, serverInfo)
+    loadWatchRoom(socket, serverInfo)
 
     console.log("Game waiting state")
   }
