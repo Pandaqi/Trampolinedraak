@@ -1,6 +1,7 @@
 import { serverInfo } from './sockets/serverInfo'
 import { controllerTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
+import loadRejoinRoom from './sockets/rejoinRoomModule'
 
 class ControllerDrawing extends Phaser.State {
   constructor () {
@@ -17,6 +18,13 @@ class ControllerDrawing extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
+
+    // Create some text to explain rejoining was succesfull. 
+    // If the player was already done for this round, the function returns true, and we stop loading the interface
+    if( loadRejoinRoom(socket, serverInfo, div) ) {
+      return;
+    }
+    
     let drawingSubmitted = false;
 
     let p1 = document.createElement("p")
@@ -29,9 +37,14 @@ class ControllerDrawing extends Phaser.State {
     div.appendChild(canvas)
 
     // make canvas the correct size
-    let desiredWidth = document.getElementById('main-controller').clientWidth - 50
-    let desiredHeight = desiredWidth * 1.3
-    gm.scale.setGameSize(desiredWidth, desiredHeight)
+    // check what's the maximum width or height we can use
+    let maxWidth = document.getElementById('main-controller').clientWidth
+    // calculate height of the viewport, subtract the space lost because of text above the canvas, subtract space lost from button (height+padding+margin)
+    let maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - canvas.getBoundingClientRect().top - (16+8*2+4*2)
+    // determine the greatest width we can use (either the original width, or the width that will lead to maximum allowed height)
+    let finalWidth = Math.min(maxWidth, maxHeight / 1.3)
+    // scale the game immediately (both stage and canvas simultaneously)
+    gm.scale.setGameSize(finalWidth, finalWidth * 1.3)
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);
@@ -65,10 +78,6 @@ class ControllerDrawing extends Phaser.State {
       drawingSubmitted = true;
     })
     div.appendChild(btn1)
-
-    let p2 = document.createElement("p")
-    p2.innerHTML = 'Create your best art! Do it! Do it now!'
-    div.appendChild(p2)
 
     // just to be sure, the computer auto-fetches all unsubmitted drawings
     socket.on('fetch-drawing', data => {

@@ -1,5 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
 import loadMainSockets from './sockets/mainSocketsGame'
+import loadMainSocketsController from './sockets/mainSocketsController'
 
 class Menu extends Phaser.State {
   constructor () {
@@ -26,9 +27,6 @@ class Menu extends Phaser.State {
 
     //gm.scale.scaleMode = Phaser.ScaleManager.RESIZE;
     //gm.scale.parentIsWindow = true;
-
-    //import SimpleGame from './index'
-    //not necessary anymore because I placed the functions here; we can just use this.game
 
     // function for creating a room (from start GUI overlay)
     document.getElementById('createRoomBtn').onclick = function () {
@@ -93,12 +91,27 @@ class Menu extends Phaser.State {
           // remove overlay
           document.getElementById("main").style.display = 'none';
 
+          // load necessary info
           serverInfo.vip = data.vip;
           serverInfo.roomCode = roomCode;
           serverInfo.rank = data.rank;
+          serverInfo.rejoin = data.rejoin;
+
+          // if it was a rejoin, load that info as well (preSignal + playerDone boolean)
+          if(data.rejoin) {
+            let pS = data.preSignal
+            if(pS != null) {
+              serverInfo[pS[0]] = pS[1]
+            }
+
+            serverInfo.playerDone = data.playerDone
+
+            // load the main sockets
+            loadMainSocketsController(socket, gm, serverInfo)
+          }
 
           // Starts the "controller" state
-          gm.state.start('ControllerWaiting');
+          gm.state.start('Controller' + data.gameState);
         } else {
           document.getElementById("err-message").innerHTML = data.err
           btn.disabled = false;
@@ -109,7 +122,7 @@ class Menu extends Phaser.State {
 
 
     // Watching a room simply means showing the game state
-    // An audience can watch on a separate screen, or you can use this to reconnect if you lost internet connection
+    // An audience can watch on a separate screen, or you can use this to reconnect a MONITOR if it lost internet connection
     document.getElementById('watchRoomBtn').onclick = function() {
       // disable the button
       let btn = this;
@@ -148,7 +161,11 @@ class Menu extends Phaser.State {
           // load the info (set the given variable on the serverInfo object)
           // TO DO: This means all those custom functions later on ('return-guesses', 'final-scores', etc.) can also be greatly simplified ...
           let preSignal = data.preSignal
-          serverInfo[preSignal[0]] = preSignal[1]
+          if(preSignal != null) {
+            serverInfo[preSignal[0]] = preSignal[1]
+          }
+
+          serverInfo.paused = data.paused
 
           serverInfo.gameLoading = true
 

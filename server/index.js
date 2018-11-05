@@ -42,7 +42,10 @@ io.on('connection', socket => {
       curRound: 0,
       gameState: "Waiting",
       timerEnd: 0,
-      signalHistory: []
+      signalHistory: [],
+      peopleDisconnected: [],
+      timerLeft: 0,
+      destroyingGame: false
     }
 
     // save the main room in the socket, for easy access later
@@ -61,18 +64,40 @@ io.on('connection', socket => {
   // when a room JOIN is requested ...
   socket.on('join-room', state => {
     // get roomcode requested, turn into all uppercase (just to be sure)
-    let code = state.roomCode
+    let room = state.roomCode
     let name = state.userName
-    let curRoom = rooms[code]
+    let curRoom = rooms[room]
 
     // check if the room exists and is joinable
     // also check if the name provided is not empty, too long, or already in use
     let success = true
     let err = ''
+    let rejoin = false
 
-    if(curRoom == undefined || curRoom.gameStarted) {
-      err = 'This room is not available or already started'
+    if(curRoom == undefined) {
+      err = 'This room is not available'
       success = false
+    } else if(curRoom.gameStarted) {
+      // If the game has already started ...
+
+      // If the game is paused, this player is a possible rejoiner!
+      if(curRoom.peopleDisconnected.length > 0) {
+        // Check if the name provided is in the list of disconnected players
+        let nameInGame = curRoom.peopleDisconnected.some(function(k) {
+            return k[1] === name;
+        });
+
+        // if so, we can succesfully rejoin!
+        if(nameInGame) {
+          rejoin = true
+        } else {
+          err = 'Attempted rejoin failed: incorrect name'
+          success = false
+        }
+      } else {
+        err = 'This game has already started'
+        success = false
+      }
     } else {
       let nameInUse = Object.keys(curRoom.players).some(function(k) {
           return curRoom.players[k].name === name;
@@ -90,7 +115,7 @@ io.on('connection', socket => {
       }
     }
 
-    console.log("Room join requested at room " + code + " || Success: " + success.toString())
+    console.log("Room join requested at room " + room + " || Success: " + success.toString())
 
     // if joining was succesful ...
     //  => add the player
@@ -99,34 +124,93 @@ io.on('connection', socket => {
     let vip = false
     let rank = -1
     if(success) {
-      socket.join(code + "-Controller")
+      socket.join(room + "-Controller")
 
-      rank = Object.keys(curRoom.players).length
+      // if this is NOT a rejoin, create a new player
+      // (if it IS a rejoin, the corresponding player should still exist within the room object, and we can get the correct values from there)
+      if(!rejoin) {
+        rank = Object.keys(curRoom.players).length
 
-      if(rank < 1) {
-        vip = true
+        if(rank < 1) {
+          vip = true
+        }
+
+        let playerObject =  { 
+          name: name, 
+          vip: vip, 
+          rank: rank, 
+          profile: null, 
+          room: room,
+          drawing: null,
+          drawingTitle: '',
+          guessVote: '', 
+          score: 0,
+        }
+        curRoom.players[socket.id] = playerObject
+
+        io.in(room+"-Monitor").emit('new-player', playerObject)
+      } else {
+        // IMPORTANT: Because it's a rejoin, the socket.id will be different
+        // As such, we need to transfer info from the OLD id to the NEW id, and then delete the old one
+
+        // find the old player id
+        for(let i = 0; i < curRoom.peopleDisconnected.length; i++) {
+          let tempVal = curRoom.peopleDisconnected[i]
+          if(tempVal[1] == name) {
+            // copy the info over from old id (tempVal[0]) to new id (socket.id)
+            curRoom.players[socket.id] = curRoom.players[ tempVal[0] ]
+
+            // remove the player from the disconnected players
+            curRoom.peopleDisconnected.splice(i, 1)
+
+            // and permanently delete the old socket.id from the player keys
+            delete curRoom.players[ tempVal[0] ]
+            break;
+          }
+        }
+
+        // get the rank
+        rank = curRoom.players[socket.id].rank
       }
-
-      let playerObject =  { 
-        name: name, 
-        vip: vip, 
-        rank: rank, 
-        profile: null, 
-        room: code,
-        drawing: null,
-        drawingTitle: '',
-        guessVote: '', 
-        score: 0,
-      }
-      curRoom.players[socket.id] = playerObject
-
-      io.in(code+"-Monitor").emit('new-player', playerObject)
 
       // save the main room on the socket object, for easy access later
-      socket.mainRoom = code
+      socket.mainRoom = room
     }
 
-    socket.emit('join-response', { success: success, vip: vip, err: err, rank: rank })
+    // send success response
+    // if it's a new player, it will just setup the game and go to the waiting area
+    // if it's a rejoin, it will push the player to the correct gamestate
+    if(!success) {
+      socket.emit('join-response', { success: success, err: err})
+    } else {
+      // TO DO: Add a preSignal and playerDone to this object. 
+      // The presignal contains information that this player should have (for this state) - it is PERSONAL, not GLOBAL
+      // The playerDone is a boolean that tells us whether the player already did his action (submit drawing, submit suggestion, etc.) or not (also PERSONAL, of course)
+      let gameState = curRoom.gameState
+
+      if(!rejoin) {
+        socket.emit('join-response', { success: success, vip: vip, rank: rank, rejoin: rejoin, gameState: gameState })
+      } else {
+        let preSignal = rooms[room].players[socket.id].preSignal
+        let playerDone = rooms[room].players[socket.id].done
+        socket.emit('join-response', { success: success, vip: vip, rank: rank, rejoin: rejoin, gameState: gameState, preSignal: preSignal, playerDone: playerDone })
+      }
+
+
+      // if this was the last one to reconnect, resume the game!
+      if(curRoom.peopleDisconnected.length <= 0) {
+        // send message to all monitors
+        io.in(room + "-Monitor").emit('pause-resume-game', false)
+
+        // send message to the VIP
+        let vipID = Object.keys(rooms[room].players).find(key => rooms[room].players[key].vip === true);
+        io.to(vipID).emit('pause-resume-game', false) 
+
+        // update timer (to account for time lost when pausing)
+        rooms[room].timerEnd = new Date(rooms[room].timerEnd + rooms[room].timerLeft*1000)
+      }
+    }
+
   })
 
   // When a room WATCH is requested
@@ -144,11 +228,11 @@ io.on('connection', socket => {
 
     // if watch request was succesful ...
     //  => add the watcher (just join the room)
-    //  => update audience/watcher count ??? (TO DO)
-    //  => determine current game state, send that to the watch room ??? (TO DO)
+    //  => send the correct info (and pre/post signals) to the new monitor
     let timer = 0
     let gameState = 'Waiting'
     let preSignal = null
+    let paused = false
 
     if(success) {
       socket.join(room + "-Monitor")
@@ -167,6 +251,10 @@ io.on('connection', socket => {
       // Get the next state
       gameState = rooms[room].gameState
 
+      if(rooms[room].peopleDisconnected.length > 0) {
+        paused = true
+      }
+
       // The game should have saved a certain "preSignal", which is the information needed before launching the current state
       // Send it as well
       if(rooms[room].preSignal !== null) {
@@ -174,7 +262,12 @@ io.on('connection', socket => {
       }
     }
 
-    socket.emit('watch-response', { success: success, err: err, timer: timer, gameState: gameState, preSignal: preSignal })
+    if(!success) {
+      socket.emit('watch-response', { success: success, err: err })
+    } else {
+      socket.emit('watch-response', { success: success, timer: timer, gameState: gameState, preSignal: preSignal, paused: paused })
+    }
+
   })
 
   // When a client, who wants to "watch room" a game that's currently underway, has finished loading ... 
@@ -187,6 +280,26 @@ io.on('connection', socket => {
       // 0 is the signal name/title/handler, 1 is the actual info being transmitted
       socket.emit(curSig[0], curSig[1])
     } 
+  })
+
+  // The VIP has decided to continue the game without disconnected players
+  socket.on('continue-without-disconnects', state => {
+    let curRoom = rooms[socket.mainRoom]
+
+    // reduce player count
+    curRoom.playerCount -= curRoom.peopleDisconnected.length
+
+    // delete all disconnected players (by socket id)
+    for(let i = 0; i < curRoom.peopleDisconnected.length; i++) {
+      delete curRoom.players[ curRoom.peopleDisconnected[i][0] ]
+    }
+
+    // send message to all monitors
+    // (the VIP doesn't need a message, as he was the one that made this decision)
+    io.in(room + "-Monitor").emit('pause-resume-game', false)
+
+    // update timer (to account for time lost when pausing)
+    rooms[room].timerEnd = new Date(rooms[room].timerEnd + rooms[room].timerLeft*1000)
   })
 
   // When any client disconnects ...
@@ -208,35 +321,52 @@ io.on('connection', socket => {
       // The game is still going strong, one just needs to "watch room" again.
     } else {
       // If the disconnect is from a player, VERY MUCH PROBLEMOS
-      // Delete the player
-      delete rooms[room].players[socket.id]
-
-      // If it was the last player, delete the whole room
-      if(Object.keys(rooms[room].players).length < 1) {
+      // If it was the last player, OR it was the VIP, delete the whole room
+      if(Object.keys(rooms[room].players).length < 1 || rooms[room].players[socket.id].vip) {
         delete rooms[room]
       } else {
-        // Inform all monitors of the change
-        // TO DO: Nobody's listening for this signal yet ...
-        // NOTE: It only sends the player that left, to save internet bandwidth
-        io.in(room + "-Monitor").emit('player-disconnected', rooms[room].players[socket.id])
+        // If it wasn't the last player in the room ...
+        // If we're in game destroying mode (the players have deliberately chosen to end the game) ...
+        if(rooms[room].destroyingGame) {
+          // Delete the player
+          delete rooms[room].players[socket.id]
+
+          // Return here; so the game does not PAUSE or try something weird
+          return;
+        }
+
+        // Pause the game
+
+        // If this is the first one to pause the game (at this moment, the game is not paused yet)
+        if(rooms[room].peopleDisconnected.length <= 0) {
+          // Save the time left on the timer
+          rooms[room].timerLeft = (rooms[room].timerEnd - new Date())/1000
+        }
+
+        // If peopleDisconnected > 0, the game must automatically be paused (this is just more efficient than adding another variable)
+        let name = rooms[room].players[socket.id].name
+        rooms[room].peopleDisconnected.push([socket.id, name])
+
+        // Inform everybody of this change ("true" means the game should pause, "false" means the game should resume)
+        io.in(room + "-Monitor").emit('pause-resume-game', true)
+
+        // We only want the VIP (for the controllers)
+        let vipID = Object.keys(rooms[room].players).find(key => rooms[room].players[key].vip === true);
+        io.to(vipID).emit('pause-resume-game', true) 
       }
     }
   })
 
   // When the game is ended/exited/destroyed
   socket.on('destroy-game', state => {
+    // set our room to destroy mode (sounds exciting)
+    rooms[socket.mainRoom].destroyingGame = true
+
     // disconnect everyone
     io.in(socket.mainRoom + "-Controller").emit('force-disconnect', {})
+    io.in(socket.mainRoom + "-Monitor").emit('force-disconnect', {})
 
     // room should be automatically destroyed when last player is removed (see "disconnect" eventListener)
-  })
-
-  socket.on('game-loading-finished', state => {
-    // get room
-    let room = socket.mainRoom
-
-    // TO DO: Determine which signals have already been sent in this state, then resend all those signals (with socket.emit)
-    // IDEA: Save all signals from a state in the room! And just replay those signals here. (When the state switches, clean this history.)
   })
 
   // When the VIP has decided to start the game ...
@@ -265,6 +395,7 @@ io.on('connection', socket => {
   socket.on('submit-drawing', state => {
     let room = socket.mainRoom
 
+    rooms[room].players[socket.id].done = true
     console.log('Received drawing in room ' + room);
 
     if(state.type == "profile") {
@@ -299,6 +430,7 @@ io.on('connection', socket => {
   socket.on('submit-suggestion', state => {
     let room = socket.mainRoom
 
+    rooms[room].players[socket.id].done = true
     console.log('Received suggestion "' + state.suggestion + '" in room ' + room)
 
     // add it to the list of suggestions
@@ -327,6 +459,7 @@ io.on('connection', socket => {
   socket.on('submit-guess', state => {
     let room = socket.mainRoom
 
+    rooms[room].players[socket.id].done = true
     console.log('Received guess "' + state + '" in room ' + room)
 
     // check if guess already exists
@@ -357,6 +490,7 @@ io.on('connection', socket => {
   socket.on('vote-guess', state => {
     let room = socket.mainRoom
 
+    rooms[room].players[socket.id].done = true
     console.log('Received guess vote "' + state + '" in room ' + room)
 
     // save the vote
@@ -398,6 +532,13 @@ io.on('connection', socket => {
     rooms[room].signalHistory = []
     rooms[room].preSignal = null
 
+    // clear player signals
+    for(let player in rooms[room].players) { 
+      rooms[room].players[player].preSignal = null
+      rooms[room].players[player].done = false
+    }
+
+
     if(rooms[room] == undefined) {
       console.log("Error: tried to switch states in a non-existent room")
       return;
@@ -429,6 +570,9 @@ io.on('connection', socket => {
           // send it (the player variable holds the key for this player in the dictionary, which is set to its socketid when created)
           // so it all works out beautifully in the end!
           io.to(player).emit('drawing-title', { title: title })
+
+          // save the preSignal
+          rooms[room].players[player].preSignal = ['drawingTitle', title]
         }
 
         timer = 60;
@@ -478,11 +622,16 @@ io.on('connection', socket => {
           p = rooms[room].players[curPlayerID]
 
           // send the next drawing (to all monitors AND controllers in the room; controllers need to know if the drawing is theirs or not)
-          // TO DO: Controllers actually only need to know the id; no need to send the whole object (OPTIMIZE!)
-          let tempObj = { dataURI: p.drawing, name: p.name + "Round" + rooms[room].curRound, id: curPlayerID, lastDrawing: lastDrawing }
-          io.in(room + "-Monitor").emit('return-drawing', tempObj)
-          io.in(room + "-Controller").emit('return-drawing', tempObj)
-          rooms[room].preSignal = ['drawing', tempObj]
+          let tempObjMonitor = { dataURI: p.drawing, name: p.name + "Round" + rooms[room].curRound, id: curPlayerID, lastDrawing: lastDrawing }
+          let tempObjController = { id: curPlayerID, lastDrawing: lastDrawing }
+
+          io.in(room + "-Monitor").emit('return-drawing', tempObjMonitor)
+          rooms[room].preSignal = ['drawing', tempObjMonitor]
+
+          io.in(room + "-Controller").emit('return-drawing', tempObjController)
+          for(let player in rooms[room].players) { 
+            rooms[room].players[player].preSignal = ['drawing', tempObjController] 
+          }
         }
 
         timer = 60;
@@ -527,6 +676,9 @@ io.on('connection', socket => {
         rooms[room].preSignal = ['guesses', guessKeys]
 
         io.in(room + "-Controller").emit('return-guesses', guessKeys)
+        for(let player in rooms[room].players) { 
+          rooms[room].players[player].preSignal = ['guesses', guessKeys] 
+        }
 
         timer = 60;
         break;

@@ -9,9 +9,13 @@ export const serverInfo = {
   rank: -1,
   playerCount: -1,
   timer: 0,
+  drawingTitle: "",
   drawing: null,
   guesses: null,
   finalGuessResults: null,
   finalScores: null,
   gameLoading: false,
+  paused: false,
+  playerDone: false,
+  rejoin: false
 }

@@ -42,7 +42,7 @@ class GameDrawing extends Phaser.State {
   }
 
   update () {
-    gameTimer(this)
+    gameTimer(this, serverInfo)
   }
 }
 

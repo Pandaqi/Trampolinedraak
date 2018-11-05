@@ -6,6 +6,9 @@ const loadMainSockets = (socket, gm, serverInfo) => {
    */
 
   socket.on('next-state', data => {
+    // we're going to a new state, so the player is not done with that state yet
+    serverInfo.playerDone = false
+
     // set the timer
     serverInfo.timer = data.timer
 
@@ -30,6 +33,69 @@ const loadMainSockets = (socket, gm, serverInfo) => {
   socket.on('force-disconnect', data => {
     socket.disconnect(true)
     window.location.reload(false)
+  })
+
+  socket.on('pause-resume-game', data => {
+    if(!serverInfo.vip) {
+      return;
+    }
+
+    if(data) {
+      // if we're already paused, don't add another set of buttons and options for the vip
+      // so, first check if this is our first pause
+      if(!serverInfo.paused) {
+        let div = document.getElementById("main-controller")
+
+        let span = document.createElement("span")
+        div.insertBefore(span, div.firstChild)
+
+        // 1. add text to explain the situation
+        let p1 = document.createElement("p")
+        p1.innerHTML = "Oh no! Player(s) disconnected!"
+        span.appendChild(p1)
+
+        let p2 = document.createElement("p")
+        p2.innerHTML = "You can wait until the player(s) rejoin. (To do so, they must rejoin the same room with the exact same name.) You can also continue without them, or stop the game completely."
+        span.appendChild(p2)
+
+        // 2. add buttons for continuing without player, or stopping game altogether
+        let btn1 = document.createElement("button")
+        btn1.innerHTML = 'Continue game'
+        btn1.addEventListener('click', function(event) {
+          socket.emit('continue-without-disconnects', {})
+
+          // remove the pause GUI
+          gm.pauseObject.innerHTML = '';
+          gm.pauseObject.remove()
+
+          // unpause the game
+          serverInfo.paused = false
+        })
+        span.appendChild(btn1)
+
+        let btn2 = document.createElement("button")
+        btn2.innerHTML = 'Destroy game'
+        btn2.addEventListener('click', function(event) {
+          socket.emit('destroy-game', {})
+        })
+        span.appendChild(btn2)
+
+        // 3. Add a horizontal rule to separate GUIs and add more space
+        let hr = document.createElement("hr")
+        span.appendChild(hr)
+
+        // 4. and save all these somewhere so they can be removed (on button click, or when the game resumes)
+        gm.pauseObject = span
+
+        serverInfo.paused = true
+      }
+    } else {
+      // remove the GUI that displays when the game is paused
+      gm.pauseObject.innerHTML = '';
+      gm.pauseObject.remove()
+
+      serverInfo.paused = false
+    }
   })
 
   /***

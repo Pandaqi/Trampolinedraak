@@ -1,4 +1,8 @@
-export const gameTimer = (ths) => {
+export const gameTimer = (ths, serverInfo) => {
+  if(serverInfo.paused) {
+    return;
+  }
+
   if(ths.timer > 0) {
     ths.timer -= ths.game.time.elapsed/1000;
     ths.timerText.text = Math.ceil(ths.timer);
@@ -8,6 +12,10 @@ export const gameTimer = (ths) => {
 }    
 
 export const controllerTimer = (ths, serverInfo, nextState) => {
+  if(serverInfo.paused) {
+    return;
+  }
+
   // Perform countdown, if we're VIP
   if(serverInfo.vip) {
     if(ths.timer > 0) {

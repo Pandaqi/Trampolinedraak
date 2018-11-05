@@ -1,6 +1,7 @@
 import { serverInfo } from './sockets/serverInfo'
 import { playerColors } from './utils/colors'
 import loadMainSockets from './sockets/mainSocketsController'
+import loadRejoinRoom from './sockets/rejoinRoomModule'
 
 class ControllerWaiting extends Phaser.State {
   constructor () {
@@ -17,6 +18,13 @@ class ControllerWaiting extends Phaser.State {
     let socket = serverInfo.socket
 
     let div = document.getElementById("main-controller")
+
+    // Create some text to explain rejoining was succesfull. 
+    // If the player was already done for this round, the function returns true, and we stop loading the interface
+    // TO DO: At the moment, rejoining in the waiting room is actually forbidden. (Also, it doesn't load the main sockets now.) Fix this sometime.
+    if( loadRejoinRoom(socket, serverInfo, div) ) {
+      return;
+    }
     
     // ask user to draw their own profile pic
     let p3 = document.createElement("p")
@@ -28,11 +36,14 @@ class ControllerWaiting extends Phaser.State {
     div.appendChild(canvas)
 
     // make canvas the correct size
-    // I reduce some of the width to leave some space on the sides, and make sure the canvas fits
-    // 60 is just a random number that works (scaling with e.g. *0.9 is a bad idea as it leaves inconsistent sizes)
-    let desiredWidth = document.getElementById('main-controller').clientWidth - 50
-    let desiredHeight = desiredWidth * 1.3
-    gm.scale.setGameSize(desiredWidth, desiredHeight)
+    // check what's the maximum width or height we can use
+    let maxWidth = document.getElementById('main-controller').clientWidth
+    // calculate height of the viewport, subtract the space lost because of text above the canvas, subtract space lost from button (height+padding+margin)
+    let maxHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - canvas.getBoundingClientRect().top - (16+8*2+4*2)
+    // determine the greatest width we can use (either the original width, or the width that will lead to maximum allowed height)
+    let finalWidth = Math.min(maxWidth, maxHeight / 1.3)
+    // scale the game immediately (both stage and canvas simultaneously)
+    gm.scale.setGameSize(finalWidth, finalWidth * 1.3)
 
     // add a bitmap for drawing
     this.bmd = gm.add.bitmapData(gm.width, gm.height);

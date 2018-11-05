@@ -1,4 +1,5 @@
 import { serverInfo } from './sockets/serverInfo'
+import loadRejoinRoom from './sockets/rejoinRoomModule'
 
 class ControllerGuessingResults extends Phaser.State {
   constructor () {
@@ -15,6 +16,12 @@ class ControllerGuessingResults extends Phaser.State {
     let socket = serverInfo.socket
     let div = document.getElementById("main-controller")
     let canvas = document.getElementById("canvas-container")
+
+    // Create some text to explain rejoining was succesfull. 
+    // If the player was already done for this round, the function returns true, and we stop loading the interface
+    if( loadRejoinRoom(socket, serverInfo, div) ) {
+      return;
+    }
 
     // the vip can continue to the next cycle (or game over) whenever he or she pleases
     // this allows for skipping "boring" animations or reveal phases

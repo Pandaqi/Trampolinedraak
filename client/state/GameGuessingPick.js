@@ -68,7 +68,7 @@ class GameGuessingPick extends Phaser.State {
   }
 
   update () {
-    gameTimer(this)
+    gameTimer(this, serverInfo)
   }
 }
 

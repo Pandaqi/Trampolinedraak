@@ -1,5 +1,6 @@
 import { serverInfo } from './sockets/serverInfo'
 import { controllerTimer } from './utils/timers'
+import loadRejoinRoom from './sockets/rejoinRoomModule'
 
 class ControllerGuessing extends Phaser.State {
   constructor () {
@@ -17,6 +18,13 @@ class ControllerGuessing extends Phaser.State {
 
     let div = document.getElementById("main-controller")
     let canvas = document.getElementById("canvas-container")
+
+    // Create some text to explain rejoining was succesfull. 
+    // If the player was already done for this round, the function returns true, and we stop loading the interface
+    if( loadRejoinRoom(socket, serverInfo, div) ) {
+      return;
+    }
+    
     let p1 = null
 
     if(serverInfo.drawing.id == socket.id) {
