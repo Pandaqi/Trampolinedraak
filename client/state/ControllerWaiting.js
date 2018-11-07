@@ -25,6 +25,28 @@ class ControllerWaiting extends Phaser.State {
     if( loadRejoinRoom(socket, serverInfo, div) ) {
       return;
     }
+
+    // display VIP message
+    // and start button
+    if(serverInfo.vip) {
+      let p2 = document.createElement("p")
+      p2.innerHTML = "You are VIP. Start the game when you're ready."
+      div.appendChild(p2)
+
+      let btn1 = document.createElement("button")
+      btn1.innerHTML = 'START GAME'
+      btn1.addEventListener('click', function(event) {
+        if(btn1.disabled) { return; }
+
+        btn1.disabled = true;
+
+        // send message to server that we want to start
+        socket.emit('start-game', {} )
+        
+        // we don't need to go to the next state; that happens automatically when the server responds with "okay! we start!"
+      })
+      div.appendChild(btn1)
+    }
     
     // ask user to draw their own profile pic
     let p3 = document.createElement("p")
@@ -78,28 +100,6 @@ class ControllerWaiting extends Phaser.State {
 
     })
     div.appendChild(btn2)
-
-    // display VIP message
-    // and start button
-    if(serverInfo.vip) {
-      let p2 = document.createElement("p")
-      p2.innerHTML = "You are VIP. Start the game when you're ready."
-      div.appendChild(p2)
-
-      let btn1 = document.createElement("button")
-      btn1.innerHTML = 'START GAME'
-      btn1.addEventListener('click', function(event) {
-        if(btn1.disabled) { return; }
-
-        btn1.disabled = true;
-
-        // send message to server that we want to start
-        socket.emit('start-game', {} )
-        
-        // we don't need to go to the next state; that happens automatically when the server responds with "okay! we start!"
-      })
-      div.appendChild(btn1)
-    }
 
     loadMainSockets(socket, gm, serverInfo)
 
