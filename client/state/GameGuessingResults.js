@@ -49,7 +49,7 @@ class GameGuessingResults extends Phaser.State {
 
     let counter = 0
     for(let key in fg) {
-      let angle = (data.rank / serverInfo.playerCount) * 2 * Math.PI
+      let angle = ( (data.rank + 0.25) / serverInfo.playerCount) * 2 * Math.PI
       let maxXHeight = gm.height*0.5/1.3;
       let maxXWidth = gm.width*0.5;
       let finalImageWidth = Math.min(maxXHeight, maxXWidth) * 0.66

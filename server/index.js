@@ -472,7 +472,7 @@ io.on('connection', socket => {
 
     // add guess to dictionary of guesses and save whose it was
     let name = rooms[room].players[socket.id].name
-    rooms[room].guesses["" + state + ""] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
+    rooms[room].guesses[state] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
 
     // notify the game monitors
     io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
@@ -499,7 +499,7 @@ io.on('connection', socket => {
 
     // notify the game monitors
     io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
-    rooms[room].signalHistory.push(['player-done', rooms[room].players[socket.id]])
+    rooms[room].signalHistory.push(['player-done', rooms[room].players[socket.id] ])
 
     // if all votes are done, immediately start results
     let allVotesDone = (rooms[room].guessVotes.length == (rooms[room].playerCount - 1))
@@ -807,24 +807,24 @@ function generateSuggestion(room) {
   let r = room.suggestions
 
   // There can be multiple adjectives (but there doesn't need to be one)
-  // The maximum is 3 (we don't want an infinite loop, nor too many adjectives)
+  // The maximum is 2 (we don't want an infinite loop, nor too many adjectives)
   let counter = 0
   while(Math.random() >= 0.25) {
     title += " " + r.adjectives[Math.floor(Math.random()*r.adjectives.length)]
     counter++
-    if(counter >= 3) {
+    if(counter >= 2) {
       break;
     }
   }
 
   title += " " + r.nouns[Math.floor(Math.random()*r.nouns.length)]
 
-  if(Math.random() >= 0.4) {
+  if(Math.random() >= 0.3) {
     title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
-  }
 
-  if(Math.random() >= 0.4) {
-    title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+    if(Math.random() >= 0.3) {
+      title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+    }
   }
 
   title = title.trim()

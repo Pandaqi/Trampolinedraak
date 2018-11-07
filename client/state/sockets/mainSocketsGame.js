@@ -13,7 +13,8 @@ const loadMainSockets = (socket, gm, serverInfo) => {
   socket.on('player-done', data => {
     console.log("Player done (" + data.name + ")")
 
-    let angle = (data.rank / serverInfo.playerCount) * 2 * Math.PI
+    // offset the angle just a little bit, to make sure stuff doesn't clash
+    let angle = ( (data.rank / serverInfo.playerCount) + 0.25*(1 / serverInfo.playerCount)) * 2 * Math.PI
     let maxXHeight = gm.height*0.5/1.3;
     let maxXWidth = gm.width*0.5;
     let finalImageWidth = Math.min(maxXHeight, maxXWidth) * 0.66 // to make sure everything's visible and not too spaced out

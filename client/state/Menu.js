@@ -159,7 +159,6 @@ class Menu extends Phaser.State {
           serverInfo.timer = data.timer
 
           // load the info (set the given variable on the serverInfo object)
-          // TO DO: This means all those custom functions later on ('return-guesses', 'final-scores', etc.) can also be greatly simplified ...
           let preSignal = data.preSignal
           if(preSignal != null) {
             serverInfo[preSignal[0]] = preSignal[1]
