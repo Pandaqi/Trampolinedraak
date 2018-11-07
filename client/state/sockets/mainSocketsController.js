@@ -29,6 +29,12 @@ const loadMainSockets = (socket, gm, serverInfo) => {
     serverInfo.drawing = data
   })
 
+  // presignals always have the following format ['variable name', value]
+  // they always set a variable on the server info (before a state change)
+  socket.on('pre-signal', data => {
+    serverInfo[data[0]] = data[1]
+  })
+
   // force disconnect (because game has been stopped/removed)
   socket.on('force-disconnect', data => {
     socket.disconnect(true)

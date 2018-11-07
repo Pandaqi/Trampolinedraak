@@ -2,6 +2,8 @@ import { serverInfo } from './sockets/serverInfo'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
 import loadWatchRoom from './sockets/watchRoomModule'
+import { mainStyle } from './utils/styles'
+import loadGUIOverlay from './utils/loadGUIOverlay'
 
 /**
  * GAME SUGGESTIONS
@@ -24,14 +26,15 @@ class GameSuggestions extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let style = { font: "bold 32px Arial", fill: "#333", wordWrap:true, wordWrapWidth: gm.width*0.8 };
-    let text = gm.add.text(gm.width*0.5, 20, "Look at your screen. Fill in the suggestions and submit!", style);
+    let text = gm.add.text(gm.width*0.5, 20, "Look at your screen. Fill in the suggestions and submit!", mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
-    this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
+    this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", mainStyle.timerText())
     this.timer = serverInfo.timer
 
     loadWatchRoom(socket, serverInfo)
+
+    loadGUIOverlay(gm, serverInfo, mainStyle.mainText(), mainStyle.subText())
 
     console.log("Game Suggestions state")
   }

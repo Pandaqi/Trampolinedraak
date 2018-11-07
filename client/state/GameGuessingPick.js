@@ -3,6 +3,8 @@ import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
 import loadWatchRoom from './sockets/watchRoomModule'
+import { mainStyle } from './utils/styles'
+import loadGUIOverlay from './utils/loadGUIOverlay'
 
 /**
  * GAME GUESSING PICK
@@ -26,7 +28,7 @@ class GameGuessingPick extends Phaser.State {
     let socket = serverInfo.socket
 
     let style = { font: "bold 32px Arial", fill: "#333"};
-    let text = gm.add.text(gm.width*0.5, 20, "Hmm, which one is the correct title?", style);
+    let text = gm.add.text(gm.width*0.5, 20, "Hmm, which one is the correct title?", mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
     // Load the drawing given to us (from the previous state; should be in serverInfo.drawing)
@@ -43,28 +45,25 @@ class GameGuessingPick extends Phaser.State {
     // Display guesses around the image (just use a circle)
     // guesses[i].guess is necessary, because guesses[i] is an object that also contains WHO made the guess
     let guesses = serverInfo.guesses
+    let guessDisplayRadius = finalImageWidth*0.66
     for(let i = 0; i < guesses.length; i++) {
       let angle = i / guesses.length * 2 * Math.PI
-      let guessText = gm.add.text(gm.width*0.5 + Math.cos(angle)*finalImageWidth, gm.height*0.5 + Math.sin(angle)*finalImageWidth*1.3, guesses[i], style);
+      let guessText = gm.add.text(gm.width*0.5 + Math.cos(angle)*guessDisplayRadius, gm.height*0.5 + Math.sin(angle)*guessDisplayRadius*1.3, guesses[i], style);
       guessText.anchor.setTo(0.5, 0.5)
     }
 
     // set timer, load timer text
-    this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
+    this.timerText = gm.add.text(gm.width*0.5, 60, "", mainStyle.timerText())
     this.timer = serverInfo.timer
 
-    // receive the final guess list
-    socket.on('final-guess-results', data => {
-      serverInfo.finalGuessResults = data
-    })
-
     loadWatchRoom(socket, serverInfo)
+
+    loadGUIOverlay(gm, serverInfo, mainStyle.mainText(), mainStyle.subText())
     
     console.log("Game Guessing Pick state")
   }
 
   shutdown() {
-    serverInfo.socket.off('final-guess-results')
   }
 
   update () {

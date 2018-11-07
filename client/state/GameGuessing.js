@@ -3,6 +3,8 @@ import dynamicLoadImage from  './drawing/dynamicLoadImage'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
 import loadWatchRoom from './sockets/watchRoomModule'
+import { mainStyle } from './utils/styles'
+import loadGUIOverlay from './utils/loadGUIOverlay'
 
 /**
  * GAME GUESSING
@@ -25,8 +27,7 @@ class GameGuessing extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let style = { font: "bold 32px Arial", fill: "#333"};
-    let newItem = gm.add.text(gm.width*0.5, 20, "What do you think this drawing represents?", style);
+    let newItem = gm.add.text(gm.width*0.5, 20, "What do you think this drawing represents?", mainStyle.mainText(gm.width*0.8));
     newItem.anchor.setTo(0.5, 0)
 
     // Load the drawing given to us (from the previous state; should be in serverInfo.drawing)
@@ -40,21 +41,17 @@ class GameGuessing extends Phaser.State {
 
     dynamicLoadImage(gm, {x: gm.width*0.5, y:gm.height*0.5}, { width: finalImageWidth, height: finalImageWidth*1.3}, imageName, dataURI)
 
-    this.timerText = gm.add.text(gm.width*0.5, 60, "", style)
+    this.timerText = gm.add.text(gm.width*0.5, 60, "", mainStyle.timerText())
     this.timer = serverInfo.timer
 
-    // save the list of guesses
-    socket.on('return-guesses', data => {
-      serverInfo.guesses = data
-    })
-
     loadWatchRoom(socket, serverInfo)
+
+    loadGUIOverlay(gm, serverInfo, mainStyle.mainText(), mainStyle.subText())
     
     console.log("Game Guessing state")
   }
 
   shutdown () {
-    serverInfo.socket.off('return-guesses')
   }
 
   update () {

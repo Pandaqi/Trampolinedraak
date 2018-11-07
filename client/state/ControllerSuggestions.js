@@ -53,7 +53,7 @@ class ControllerSuggestions extends Phaser.State {
     let btn1 = document.createElement("button")
     btn1.innerHTML = 'Submit'
     btn1.addEventListener('click', function(event) {
-      let sug = [inp1.value.toLowerCase(), inp2.value.toLowerCase(), inp3.value.toLowerCase(), inp4.value.toLowerCase()]
+      let sug = [inp1.value.toLowerCase().trim(), inp2.value.toLowerCase().trim(), inp3.value.toLowerCase().trim(), inp4.value.toLowerCase().trim()]
 
       // empty suggestions are not welcome!
       for(let i = 0; i < sug.length; i++) {

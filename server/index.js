@@ -472,7 +472,7 @@ io.on('connection', socket => {
 
     // add guess to dictionary of guesses and save whose it was
     let name = rooms[room].players[socket.id].name
-    rooms[room].guesses[state] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
+    rooms[room].guesses["" + state + ""] = { player: socket.id, name: name, whoGuessedIt: [], correct: false }
 
     // notify the game monitors
     io.in(room + "-Monitor").emit('player-done', rooms[room].players[socket.id])
@@ -548,7 +548,7 @@ io.on('connection', socket => {
       // If the next state is the suggestions state (first of the game) ...
       case 'Suggestions':
         // inform (only the monitors) of some extra info, such as player count
-        io.in(room + "-Monitor").emit('setup-info', rooms[room].playerCount)
+        io.in(room + "-Monitor").emit('pre-signal', ['playerCount', rooms[room].playerCount])
         rooms[room].preSignal = ['playerCount', rooms[room].playerCount]
 
         // just set the timer
@@ -569,7 +569,7 @@ io.on('connection', socket => {
 
           // send it (the player variable holds the key for this player in the dictionary, which is set to its socketid when created)
           // so it all works out beautifully in the end!
-          io.to(player).emit('drawing-title', { title: title })
+          io.to(player).emit('pre-signal', ['drawingTitle', title])
 
           // save the preSignal
           rooms[room].players[player].preSignal = ['drawingTitle', title]
@@ -639,8 +639,7 @@ io.on('connection', socket => {
 
       // If the next state is the one where we pick the correct guess from the game screen ...
       case 'GuessingPick':
-        // TO DO: We actually need to autofetch all guesses before we continue
-        // but not now, because we're still testing other stuff :p
+        // TO DO: We could autofetch all guesses before we continue, but it's not necessary really
         certain = true
 
         // we should have a list of guesses now
@@ -672,10 +671,10 @@ io.on('connection', socket => {
 
         // throw them back (to both monitor and controller)
         // to save internet (and computational power), just send the array immediately
-        io.in(room + "-Monitor").emit('return-guesses', guessKeys)
+        io.in(room + "-Monitor").emit('pre-signal', ['guesses', guessKeys])
         rooms[room].preSignal = ['guesses', guessKeys]
 
-        io.in(room + "-Controller").emit('return-guesses', guessKeys)
+        io.in(room + "-Controller").emit('pre-signal', ['guesses', guessKeys])
         for(let player in rooms[room].players) { 
           rooms[room].players[player].preSignal = ['guesses', guessKeys] 
         }
@@ -706,6 +705,8 @@ io.on('connection', socket => {
             p = rooms[room].players[key]
             let myVote = p.guessVote
 
+            console.log("Checking player vote: " + myVote + " | Blabla ")
+
             // if the vote was correct ...
             if(myVote == realTitle) {
               //add score
@@ -719,17 +720,22 @@ io.on('connection', socket => {
               rooms[room].guesses[realTitle].whoGuessedIt.push(p.name)
             } else {
               // if the vote was incorrect, search whose title it was, give them points
-              // technically, one can vote for one's own incorrect drawing title, I don't see the need to prevent against such stupidity :p
-              for(let key2 in rooms[room].players) {
-                let p2 = rooms[room].players[key2]
-                if(myVote == p2.drawingTitle) {
-                  p2.score += 750;
-
-                  // save who guessed this
-                  rooms[room].guesses[myVote].whoGuessedIt.push(p.name)
-                  break;
+              // technically, one can vote for one's own incorrect drawing title, but that yields a penalty
+              // don't need to add points to the computer (and I don't want to)
+              let searchPlayerID = Object.keys(rooms[room].guesses).find( key => key == myVote );
+              let guessObj = rooms[room].guesses[searchPlayerID]
+              if(guessObj != null && guessObj.name != "computer") {
+                // if you voted your own incorrect title => PENALTY POINTS!
+                if(guessObj.player == key) {
+                  p.score -= 750
+                } else {
+                  // otherwise, the player that "fooled you" gets points
+                  rooms[room].players[ guessObj.player ].score += 750
                 }
+
               }
+              
+              rooms[room].guesses[myVote].whoGuessedIt.push(p.name)
             }
           }
         }
@@ -741,7 +747,7 @@ io.on('connection', socket => {
         }
 
         // send each guess (including the correct title), who guessed it, and who wrote it
-        io.in(room + "-Monitor").emit('final-guess-results', rooms[room].guesses)
+        io.in(room + "-Monitor").emit('pre-signal', ['finalGuessResults', rooms[room].guesses])
         rooms[room].preSignal = ['finalGuessResults', rooms[room].guesses]
 
         // already wipe out this cycle
@@ -761,7 +767,7 @@ io.on('connection', socket => {
         r = rooms[room]
 
         // send the score
-        io.in(room + "-Monitor").emit('final-scores', r.players)
+        io.in(room + "-Monitor").emit('pre-signal', ['finalScores', r.players])
         rooms[room].preSignal = ['finalScores', r.players]
 
         // wipe out this round
@@ -801,25 +807,27 @@ function generateSuggestion(room) {
   let r = room.suggestions
 
   // There can be multiple adjectives (but there doesn't need to be one)
-  // The maximum is 4 (we don't want an infinite loop, nor too many adjectives)
+  // The maximum is 3 (we don't want an infinite loop, nor too many adjectives)
   let counter = 0
   while(Math.random() >= 0.25) {
     title += " " + r.adjectives[Math.floor(Math.random()*r.adjectives.length)]
     counter++
-    if(counter >= 4) {
+    if(counter >= 3) {
       break;
     }
   }
 
   title += " " + r.nouns[Math.floor(Math.random()*r.nouns.length)]
 
-  if(Math.random() >= 0.25) {
+  if(Math.random() >= 0.4) {
     title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
   }
 
-  if(Math.random() >= 0.25) {
+  if(Math.random() >= 0.4) {
     title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
   }
+
+  title = title.trim()
 
   return title
 }

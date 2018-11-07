@@ -2,14 +2,16 @@ import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { playerColors } from './utils/colors'
 import loadWatchRoom from './sockets/watchRoomModule'
+import { mainStyle } from './utils/styles'
+import loadGUIOverlay from './utils/loadGUIOverlay'
 
 /**
  * GAME GUESSING RESULTS
  * 
  * In this state, the GAME GUESSING and GAME GUESSING PICK states have already been played.
  * A picture is shown, including all suggestions, and now it is made known (one by one) who voted on what, and what is the correct title!
- * There's no timer here - the phase ends once the results have been displayed. 
- *      (... but how? I don't want to give these game states any important things to do, only the Controller)
+ * There's no timer here - the phase ends once the results have been displayed (and the VIP chooses to continue)
+ *
  */
 
 class GameGuessingResults extends Phaser.State {
@@ -25,8 +27,7 @@ class GameGuessingResults extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let style = { font: "bold 32px Arial", fill: "#333"};
-    let newItem = gm.add.text(gm.width*0.5, 20, "Let's see how you did!", style);
+    let newItem = gm.add.text(gm.width*0.5, 20, "Let's see how you did!", mainStyle.mainText(gm.width*0.8));
     newItem.anchor.setTo(0.5, 0)
 
     // Load the drawing given to us (from the previous state; should be in serverInfo.drawing)
@@ -48,37 +49,44 @@ class GameGuessingResults extends Phaser.State {
 
     let counter = 0
     for(let key in fg) {
-      // highlight the correct title
-      style = { font: "bold 32px Arial", fill: "#333"};
-      if(fg[key].correct) { style.fill = '#237a23' }
+      let angle = (data.rank / serverInfo.playerCount) * 2 * Math.PI
+      let maxXHeight = gm.height*0.5/1.3;
+      let maxXWidth = gm.width*0.5;
+      let finalImageWidth = Math.min(maxXHeight, maxXWidth) * 0.66
 
-      let text = gm.add.text(gm.width*0.5, 80 + counter*80, key, style)
+      let xPos = gm.width*0.5 + Math.cos(angle)*finalImageWidth
+      let yPos = gm.height*0.5 + Math.sin(angle)*finalImageWidth*1.3
+
+      let fillColor = '#333'
+      let writtenByText = 'Written by: ' + fg[key].name
+      // highlight the correct title
+      if(fg[key].correct) { 
+        fillColor = '#237a23'
+        writtenByText = 'The correct answer!'
+      }
+
+      let text = gm.add.text(xPos, yPos, key, mainStyle.mainText(gm.width*0.8, fillColor))
       text.anchor.setTo(0.5, 0.5)
 
-      style = { font: "16px Arial", fill: "#333"};
-      let text2 = gm.add.text(gm.width*0.5, 80 + counter*80 + 32, 'Guessed by: ' + fg[key].whoGuessedIt.join(", "), style)
-      text2.anchor.setTo(0.5, 0.5)
+      let text3 = gm.add.text(xPos, yPos + 32, writtenByText, mainStyle.subText(gm.width*0.8))
+      text3.anchor.setTo(0.5, 0.5)
 
-      if(!fg[key].correct) {
-        style = { font: "16px Arial", fill: "#333"};
-        let text3 = gm.add.text(gm.width*0.5, 80 + counter*80 + 50, 'Written by: ' + fg[key].name, style)
-        text3.anchor.setTo(0.5, 0.5)
+      if(fg[key].whoGuessedIt.length > 0) {
+        let text2 = gm.add.text(xPos, yPos + 50, 'Guessed by: ' + fg[key].whoGuessedIt.join(", "), mainStyle.subText(gm.width*0.8))
+        text2.anchor.setTo(0.5, 0.5)
       }
 
       counter++;
     }
 
-    socket.on('final-scores', data => {
-      serverInfo.finalScores = data
-    })
-
     loadWatchRoom(socket, serverInfo)
+
+    loadGUIOverlay(gm, serverInfo, mainStyle.mainText(), mainStyle.subText())
 
     console.log("Game Guessing Results state")
   }
 
   shutdown() {
-    serverInfo.socket.off('final-scores')
   }
 
   update () {

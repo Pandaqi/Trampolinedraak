@@ -3,6 +3,8 @@ import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { gameTimer } from './utils/timers'
 import { playerColors } from './utils/colors'
 import loadWatchRoom from './sockets/watchRoomModule'
+import { mainStyle } from './utils/styles'
+import loadGUIOverlay from './utils/loadGUIOverlay'
 
 /**
  * GAME DRAWING
@@ -25,14 +27,15 @@ class GameDrawing extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let style = { font: "bold 32px Arial", fill: "#333", wordWrap: true, wordWrapWidth: gm.width*0.8};
-    let text = gm.add.text(gm.width*0.5, 20, "Draw the suggestion shown on your screen!", style);
+    let text = gm.add.text(gm.width*0.5, 20, "Draw the suggestion shown on your screen!", mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
-    this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", style)
+    this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", mainStyle.timerText())
     this.timer = serverInfo.timer
 
     loadWatchRoom(socket, serverInfo)
+
+    loadGUIOverlay(gm, serverInfo, mainStyle.mainText(), mainStyle.subText())
 
     console.log("Game Drawing state")
   }

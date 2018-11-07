@@ -1,18 +1,10 @@
-/* import { createText } from './utils'
-import fileLoader from '../config/fileloader'
-import player from './player'
-import newPlayer from './sockets/newPlayer'
-import updatePlayers from './sockets/updatePlayers'
-import playerMovementInterpolation from './predictions/playerMovementInterpolation'
-let otherPlayers = {}
-*/
-
 import { serverInfo } from './sockets/serverInfo'
 import dynamicLoadImage from './drawing/dynamicLoadImage'
 import { playerColors } from './utils/colors'
 import loadPlayerVisuals from './drawing/loadPlayerVisuals'
 import loadMainSockets from './sockets/mainSocketsGame'
 import loadWatchRoom from './sockets/watchRoomModule'
+import { mainStyle } from './utils/styles'
 
 
 class GameWaiting extends Phaser.State {
@@ -30,31 +22,25 @@ class GameWaiting extends Phaser.State {
       gm.scale.refresh();
     });
     gm.scale.refresh();
-
-    // Loads files
-    //fileLoader(this.game)
   }
 
   create () {
     let gm = this.game
 
     // display room code
-    var style = { font: "bold 32px Arial", fill: "#333"};
-    var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, style);
+    var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
     // explain that we're waiting for people to join
-    let style2 = { font: "bold 32px Arial", fill: "#666"}
-    let text2 = gm.add.text(gm.width*0.5, 60, "Players can now join the game!", style2);
+    let text2 = gm.add.text(gm.width*0.5, 60, "Players can now join the game!", mainStyle.subText(gm.width*0.8));
     text2.anchor.setTo(0.5, 0)
 
     let socket = serverInfo.socket
 
     socket.on('new-player', data => {
-      style = { font: "bold 32px Arial", fill: playerColors[data.rank]};
       let x = gm.width*0.5
       let y = 120 + data.rank*60
-      let newItem = gm.add.text(x, y, data.name, style);
+      let newItem = gm.add.text(x, y, data.name, mainStyle.mainText(gm.width, playerColors[data.rank]));
       newItem.anchor.setTo(0, 0.5)
     })
 
@@ -76,10 +62,6 @@ class GameWaiting extends Phaser.State {
       //graphics.drawCircle(randPos[0], randPos[1], 100);
     })
 
-    socket.on('setup-info', data => {
-      serverInfo.playerCount = data
-    })
-
     loadMainSockets(socket, gm, serverInfo)
     loadWatchRoom(socket, serverInfo)
 
@@ -93,7 +75,6 @@ class GameWaiting extends Phaser.State {
 
     socket.off('new-player')
     socket.off('player-updated-profile')
-    socket.off('setup-info')
   }
 
   update () {
