@@ -1,8 +1,8 @@
 import dynamicLoadImage from './dynamicLoadImage'
+import { mainStyle } from '../utils/styles'
 
 const loadPlayerVisuals = (gm, x, y, color, data) => {
-  let style = { font: "bold 32px Arial", fill: color};
-  let newItem = gm.add.text(x, y, data.name, style);
+  let newItem = gm.add.text(x, y, data.name, mainStyle.mainText(gm.width*0.8, color));
   newItem.anchor.setTo(0, 0.5)
 
   if(data.profile != null) {
