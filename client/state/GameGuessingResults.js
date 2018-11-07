@@ -66,14 +66,14 @@ class GameGuessingResults extends Phaser.State {
         writtenByText = 'The correct answer!'
       }
 
-      let text = gm.add.text(xPos, yPos, key, mainStyle.mainText(gm.width*0.8, fillColor))
-      text.anchor.setTo(0.5, 0.5)
+      let text = gm.add.text(xPos, yPos, key, mainStyle.mainText(250, fillColor))
+      text.anchor.setTo(0.5, 1.0)
 
-      let text3 = gm.add.text(xPos, yPos + 32, writtenByText, mainStyle.subText(gm.width*0.8))
+      let text3 = gm.add.text(xPos, yPos + 32, writtenByText, mainStyle.subText(250))
       text3.anchor.setTo(0.5, 0.5)
 
       if(fg[key].whoGuessedIt.length > 0) {
-        let text2 = gm.add.text(xPos, yPos + 50, 'Guessed by: ' + fg[key].whoGuessedIt.join(", "), mainStyle.subText(gm.width*0.8))
+        let text2 = gm.add.text(xPos, yPos + 50, 'Guessed by: ' + fg[key].whoGuessedIt.join(", "), mainStyle.subText(250))
         text2.anchor.setTo(0.5, 0.5)
       }
 

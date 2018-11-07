@@ -96,6 +96,8 @@ class ControllerWaiting extends Phaser.State {
 
       if(!serverInfo.vip) {
         p3.innerHTML = 'Waiting for game to start ...';
+      } else {
+        p3.innerHTML = ''
       }
 
     })

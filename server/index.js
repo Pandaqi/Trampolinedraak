@@ -695,9 +695,15 @@ io.on('connection', socket => {
         // But, if EVERYONE guesses correctly, X loses 2000 points
         
         curPlayerID = rooms[room].playerOrder[rooms[room].orderPointer]
-        
+
+        // quick hack to make the server NOT crash when playing with one player
+        if(rooms[room].playerCount <= 1) {
+          curPlayerID = Object.keys(rooms[room].players)[0]
+        }
+
         let realTitle = rooms[room].players[curPlayerID].drawingTitle
-        let countCorrect = 0;
+        let countCorrect = 0
+
         for(let key in rooms[room].players) {
           // the player who drew the picture already gets points from checking the other players
           // so exclude him from this loop

@@ -47,7 +47,7 @@ class GameGuessingPick extends Phaser.State {
     let guessDisplayRadius = finalImageWidth*0.66
     for(let i = 0; i < guesses.length; i++) {
       let angle = (i + 0.75) / guesses.length * 2 * Math.PI
-      let guessText = gm.add.text(gm.width*0.5 + Math.cos(angle)*guessDisplayRadius, gm.height*0.5 + Math.sin(angle)*guessDisplayRadius*1.3, guesses[i], mainStyle.mainText(gm.width*0.8));
+      let guessText = gm.add.text(gm.width*0.5 + Math.cos(angle)*guessDisplayRadius, gm.height*0.5 + Math.sin(angle)*guessDisplayRadius*1.3, guesses[i], mainStyle.mainText(250));
       guessText.anchor.setTo(0.5, 0.5)
     }
 
