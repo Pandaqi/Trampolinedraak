@@ -27,7 +27,7 @@ class GameGuessingResults extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let newItem = gm.add.text(gm.width*0.5, 20, "Let's see how you did!", mainStyle.mainText(gm.width*0.8));
+    let newItem = gm.add.text(gm.width*0.5, 20, serverInfo.translate("game-guessing-results-1"), mainStyle.mainText(gm.width*0.8));
     newItem.anchor.setTo(0.5, 0)
 
     // Load the drawing given to us (from the previous state; should be in serverInfo.drawing)

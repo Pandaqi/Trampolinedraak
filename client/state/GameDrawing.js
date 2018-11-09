@@ -27,7 +27,7 @@ class GameDrawing extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let text = gm.add.text(gm.width*0.5, 20, "Draw the suggestion shown on your screen!", mainStyle.mainText(gm.width*0.8));
+    let text = gm.add.text(gm.width*0.5, 20, serverInfo.translate('game-drawing-1'), mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", mainStyle.timerText())

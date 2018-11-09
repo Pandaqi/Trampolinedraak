@@ -62,7 +62,7 @@ const loadMainSockets = (socket, gm, serverInfo) => {
       serverInfo.paused = true
       
       let style = { font: "bold 32px Arial", fill: "#FF0000" };
-      let text = gm.add.text(20, 20, "GAME PAUSED", style);
+      let text = gm.add.text(20, 20, serverInfo.translate('game-paused').toUpperCase(), style);
       text.anchor.setTo(0, 0)
 
       gm.pauseObject = text

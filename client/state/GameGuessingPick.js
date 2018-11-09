@@ -27,7 +27,7 @@ class GameGuessingPick extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let text = gm.add.text(gm.width*0.5, 20, "Hmm, which one is the correct title?", mainStyle.mainText(gm.width*0.8));
+    let text = gm.add.text(gm.width*0.5, 20, serverInfo.translate('game-guessing-pick-1'), mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
     // Load the drawing given to us (from the previous state; should be in serverInfo.drawing)
@@ -42,7 +42,6 @@ class GameGuessingPick extends Phaser.State {
     dynamicLoadImage(gm, {x: gm.width*0.5, y:gm.height*0.5}, { width: finalImageWidth, height: finalImageWidth*1.3}, imageName, dataURI)
 
     // Display guesses around the image (just use a circle)
-    // guesses[i].guess is necessary, because guesses[i] is an object that also contains WHO made the guess
     let guesses = serverInfo.guesses
     let guessDisplayRadius = finalImageWidth*0.66
     for(let i = 0; i < guesses.length; i++) {

@@ -57,16 +57,16 @@ const loadMainSockets = (socket, gm, serverInfo) => {
 
         // 1. add text to explain the situation
         let p1 = document.createElement("p")
-        p1.innerHTML = "Oh no! Player(s) disconnected!"
+        p1.innerHTML = serverInfo.translate("player-disconnect-1")
         span.appendChild(p1)
 
         let p2 = document.createElement("p")
-        p2.innerHTML = "You can wait until the player(s) rejoin. (To do so, they must rejoin the same room with the exact same name.) You can also continue without them, or stop the game completely."
+        p2.innerHTML = serverInfo.translate("player-disconnect-2") 
         span.appendChild(p2)
 
         // 2. add buttons for continuing without player, or stopping game altogether
         let btn1 = document.createElement("button")
-        btn1.innerHTML = 'Continue game'
+        btn1.innerHTML = serverInfo.translate('continue-game')
         btn1.addEventListener('click', function(event) {
           socket.emit('continue-without-disconnects', {})
 
@@ -80,7 +80,7 @@ const loadMainSockets = (socket, gm, serverInfo) => {
         span.appendChild(btn1)
 
         let btn2 = document.createElement("button")
-        btn2.innerHTML = 'Destroy game'
+        btn2.innerHTML = serverInfo.translate('destroy-game')
         btn2.addEventListener('click', function(event) {
           socket.emit('destroy-game', {})
         })

@@ -30,35 +30,43 @@ class ControllerGuessingResults extends Phaser.State {
       // if it's the last drawing, go to game over screen
       if(serverInfo.drawing.lastDrawing) {
         let p1 = document.createElement("p")
-        p1.innerHTML = "That was it for this round! At the game over screen, you can play another round or stop the game.";
+        p1.innerHTML = serverInfo.translate("controller-guessing-results-1")
         div.appendChild(p1)
 
         let btn1 = document.createElement("button")
-        btn1.innerHTML = "Go to game over"
+        btn1.innerHTML = serverInfo.translate('go-game-over') 
 
         btn1.addEventListener('click', function(event) {
           // tell the server that we want to continue
           socket.emit('timer-complete', { nextState: 'Over', certain: true })
+
+          // destroy the interface
+          btn1.remove()
+          p1.innerHTML = serverInfo.translate('loading-next-screen')
         })
         div.appendChild(btn1)
       } else {
         let p1 = document.createElement("p")
-        p1.innerHTML = "Tap the button below whenever you want to start the next drawing";
+        p1.innerHTML = serverInfo.translate("controller-guessing-results-2")
         div.appendChild(p1)
 
         let btn1 = document.createElement("button")
-        btn1.innerHTML = "Load next drawing!"
+        btn1.innerHTML = serverInfo.translate("load-next-drawing")
 
         btn1.addEventListener('click', function(event) {
           // tell the server that we want to continue
           socket.emit('timer-complete', { nextState: 'Guessing', certain: true })
+
+          // destroy interface
+          btn1.remove()
+          p1.innerHTML = serverInfo.translate('loading-next-screen')
         })
         div.appendChild(btn1)
       }
     } else {
-        let p1 = document.createElement("p")
-        p1.innerHTML = "That was it for this round! Please wait for the VIP to start the next round.";
-        div.appendChild(p1)
+      let p1 = document.createElement("p")
+      p1.innerHTML = serverInfo.translate("controller-guessing-results-3")
+      div.appendChild(p1)
     } 
 
     console.log("Controller Guessing Results state");

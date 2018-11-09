@@ -28,11 +28,11 @@ class GameWaiting extends Phaser.State {
     let gm = this.game
 
     // display room code
-    var text = gm.add.text(gm.width*0.5, 20, "ROOM: " + serverInfo.roomCode, mainStyle.mainText(gm.width*0.8));
+    var text = gm.add.text(gm.width*0.5, 20, serverInfo.translate('room').toUpperCase() + ": " + serverInfo.roomCode, mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
     // explain that we're waiting for people to join
-    let text2 = gm.add.text(gm.width*0.5, 60, "Players can now join the game!", mainStyle.subText(gm.width*0.8));
+    let text2 = gm.add.text(gm.width*0.5, 60, serverInfo.translate('game-waiting-1'), mainStyle.subText(gm.width*0.8));
     text2.anchor.setTo(0.5, 0)
 
     let socket = serverInfo.socket

@@ -28,7 +28,7 @@ class ControllerDrawing extends Phaser.State {
     let drawingSubmitted = false;
 
     let p1 = document.createElement("p")
-    p1.innerHTML = 'Draw this: <span class="titleSuggestion">' + serverInfo.drawingTitle + '</span>'
+    p1.innerHTML = serverInfo.translate('controller-drawing-1') + ': <span class="titleSuggestion">' + serverInfo.drawingTitle + '</span>'
     div.appendChild(p1)
 
     // move canvas inside GUI (and bring it back to life from display=none)
@@ -60,7 +60,7 @@ class ControllerDrawing extends Phaser.State {
 
     // display button to submit drawing
     let btn1 = document.createElement("button")
-    btn1.innerHTML = 'Submit drawing'
+    btn1.innerHTML = serverInfo.translate('submit-drawing')
     btn1.addEventListener('click', function(event) {
       // Remove submit button
       btn1.remove();
@@ -73,7 +73,7 @@ class ControllerDrawing extends Phaser.State {
       // Disable canvas
       canvas.style.display = 'none';
 
-      p1.innerHTML = "That drawing is ... let's say, something special.";
+      p1.innerHTML = serverInfo.translate('controller-drawing-2')
 
       drawingSubmitted = true;
     })

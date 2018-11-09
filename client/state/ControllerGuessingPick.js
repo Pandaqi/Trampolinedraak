@@ -29,13 +29,13 @@ class ControllerGuessingPick extends Phaser.State {
 
     if(serverInfo.drawing.id == socket.id) {
       let p1 = document.createElement("p")
-      p1.innerHTML = "Still your drawing. Sit back and relax.";
+      p1.innerHTML = serverInfo.translate('controller-guessing-pick-1')
       div.appendChild(p1)
     } else {
       let buttonArr = []
 
       let p1 = document.createElement("p")
-      p1.innerHTML = "Which of these do you think is the correct title?";
+      p1.innerHTML = serverInfo.translate('controller-guessing-pick-2') 
       div.appendChild(p1)
 
       // hold all the buttons in a container; much cleaner
@@ -54,7 +54,7 @@ class ControllerGuessingPick extends Phaser.State {
           socket.emit('vote-guess', theGuess)
 
           // Inform user that it was succesful
-          p1.innerHTML = "Really? You think it's that?!"
+          p1.innerHTML = serverInfo.translate('controller-guessing-pick-3') 
 
           // Remove all buttons
           container.remove();

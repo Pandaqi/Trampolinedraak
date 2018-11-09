@@ -37,10 +37,22 @@ class Menu extends Phaser.State {
       serverInfo.socket = io(serverInfo.SERVER_IP)
       let socket = serverInfo.socket
 
+      // Get the chosen game settings from the menu screen
+      // In this case, it's only a language selector
+      let languageButtons = document.getElementsByName('languageSelection')
+      let language
+      for(let i = 0; i < languageButtons.length; i++){
+          if(languageButtons[i].checked){
+              language = languageButtons[i].value
+              break;
+          }
+      }
+      serverInfo.language = language
+
       // Creates game room on server
       socket.on('connect', () => {
         document.getElementById("err-message").innerHTML = 'Creating room ...'
-        socket.emit('new-room', {})
+        socket.emit('new-room', { language: language })
       })
 
       // Once the room has been succesfully created
@@ -96,6 +108,7 @@ class Menu extends Phaser.State {
           serverInfo.roomCode = roomCode;
           serverInfo.rank = data.rank;
           serverInfo.rejoin = data.rejoin;
+          serverInfo.language = data.language;
 
           // if it was a rejoin, load that info as well (preSignal + playerDone boolean)
           if(data.rejoin) {
@@ -165,7 +178,7 @@ class Menu extends Phaser.State {
           }
 
           serverInfo.paused = data.paused
-
+          serverInfo.language = data.language
           serverInfo.gameLoading = true
 
           // go to the correct state

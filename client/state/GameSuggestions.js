@@ -26,7 +26,7 @@ class GameSuggestions extends Phaser.State {
     let gm = this.game
     let socket = serverInfo.socket
 
-    let text = gm.add.text(gm.width*0.5, 20, "Look at your screen. Fill in the suggestions and submit!", mainStyle.mainText(gm.width*0.8));
+    let text = gm.add.text(gm.width*0.5, 20, serverInfo.translate('game-suggestions-1'), mainStyle.mainText(gm.width*0.8));
     text.anchor.setTo(0.5, 0)
 
     this.timerText = gm.add.text(gm.width*0.5, gm.height*0.5, "", mainStyle.timerText())

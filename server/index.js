@@ -45,7 +45,9 @@ io.on('connection', socket => {
       signalHistory: [],
       peopleDisconnected: [],
       timerLeft: 0,
-      destroyingGame: false
+      destroyingGame: false,
+
+      language: state.language
     }
 
     // save the main room in the socket, for easy access later
@@ -183,17 +185,15 @@ io.on('connection', socket => {
     if(!success) {
       socket.emit('join-response', { success: success, err: err})
     } else {
-      // TO DO: Add a preSignal and playerDone to this object. 
-      // The presignal contains information that this player should have (for this state) - it is PERSONAL, not GLOBAL
-      // The playerDone is a boolean that tells us whether the player already did his action (submit drawing, submit suggestion, etc.) or not (also PERSONAL, of course)
       let gameState = curRoom.gameState
+      let language = curRoom.language
 
       if(!rejoin) {
-        socket.emit('join-response', { success: success, vip: vip, rank: rank, rejoin: rejoin, gameState: gameState })
+        socket.emit('join-response', { success: success, vip: vip, rank: rank, rejoin: rejoin, gameState: gameState, language: language })
       } else {
         let preSignal = rooms[room].players[socket.id].preSignal
         let playerDone = rooms[room].players[socket.id].done
-        socket.emit('join-response', { success: success, vip: vip, rank: rank, rejoin: rejoin, gameState: gameState, preSignal: preSignal, playerDone: playerDone })
+        socket.emit('join-response', { success: success, vip: vip, rank: rank, rejoin: rejoin, gameState: gameState, language: language, preSignal: preSignal, playerDone: playerDone })
       }
 
 
@@ -233,6 +233,7 @@ io.on('connection', socket => {
     let gameState = 'Waiting'
     let preSignal = null
     let paused = false
+    let language = rooms[room].language
 
     if(success) {
       socket.join(room + "-Monitor")
@@ -265,7 +266,7 @@ io.on('connection', socket => {
     if(!success) {
       socket.emit('watch-response', { success: success, err: err })
     } else {
-      socket.emit('watch-response', { success: success, timer: timer, gameState: gameState, preSignal: preSignal, paused: paused })
+      socket.emit('watch-response', { success: success, timer: timer, gameState: gameState, language: language, preSignal: preSignal, paused: paused })
     }
 
   })
@@ -651,8 +652,11 @@ io.on('connection', socket => {
         p = rooms[room].players[curPlayerID]
         guesses[p.drawingTitle] = { player: curPlayerID, name: p.name, whoGuessedIt: [], correct: true }
 
-        // add 4 random computer titles
-        for(let i = 0; i < 4; i++) {
+        // add random computer titles
+        // the more players you have, the less computer titles are added
+        //  (with 8 players, 0 computer titles are being added)
+        let titlesToAdd = Math.max( Math.ceil(4 - rooms[room].playerCount*0.5), 0)
+        for(let i = 0; i < titlesToAdd; i++) {
           // generate a random suggestion
           let title = generateSuggestion(rooms[room])
 
@@ -812,25 +816,44 @@ function generateSuggestion(room) {
   let title = ""
   let r = room.suggestions
 
-  // There can be multiple adjectives (but there doesn't need to be one)
-  // The maximum is 2 (we don't want an infinite loop, nor too many adjectives)
-  let counter = 0
-  while(Math.random() >= 0.25) {
-    title += " " + r.adjectives[Math.floor(Math.random()*r.adjectives.length)]
-    counter++
-    if(counter >= 2) {
-      break;
+  if(room.language == 'en') {
+    // There can be multiple adjectives (but there doesn't need to be one)
+    // The maximum is 2 (we don't want an infinite loop, nor too many adjectives)
+    let counter = 0
+    while(Math.random() >= 0.25) {
+      title += " " + r.adjectives[Math.floor(Math.random()*r.adjectives.length)]
+      counter++
+      if(counter >= 2) {
+        break;
+      }
     }
-  }
 
-  title += " " + r.nouns[Math.floor(Math.random()*r.nouns.length)]
-
-  if(Math.random() >= 0.3) {
-    title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
+    title += " " + r.nouns[Math.floor(Math.random()*r.nouns.length)]
 
     if(Math.random() >= 0.3) {
-      title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+      title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
+
+      if(Math.random() >= 0.3) {
+        title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+      }
     }
+  } else if (room.language == 'nl') {
+    let adverbIncluded = false
+    if(Math.random() >= 0.3) {
+      title += " " + r.adverbs[Math.floor(Math.random()*r.adverbs.length)]
+      adverbIncluded = true
+    }
+
+    if(adverbIncluded || Math.random() >= 0.3) {
+      title += " " + r.verbs[Math.floor(Math.random()*r.verbs.length)]
+    }
+
+    if(Math.random() >= 0.3) {
+      title += " " + r.adjectives[Math.floor(Math.random()*r.adjectives.length)]
+    }
+
+    title += " " + r.nouns[Math.floor(Math.random()*r.nouns.length)]
+
   }
 
   title = title.trim()

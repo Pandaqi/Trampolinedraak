@@ -30,11 +30,11 @@ class ControllerWaiting extends Phaser.State {
     // and start button
     if(serverInfo.vip) {
       let p2 = document.createElement("p")
-      p2.innerHTML = "You are VIP. Start the game when you're ready."
+      p2.innerHTML = serverInfo.translate("vip-message-waiting")
       div.appendChild(p2)
 
       let btn1 = document.createElement("button")
-      btn1.innerHTML = 'START GAME'
+      btn1.innerHTML = serverInfo.translate("start-game")
       btn1.addEventListener('click', function(event) {
         if(btn1.disabled) { return; }
 
@@ -50,7 +50,7 @@ class ControllerWaiting extends Phaser.State {
     
     // ask user to draw their own profile pic
     let p3 = document.createElement("p")
-    p3.innerHTML = "Draw yourself a profile pic!"
+    p3.innerHTML = serverInfo.translate('controller-waiting-1')
     div.appendChild(p3)
 
     // move canvas inside GUI
@@ -81,7 +81,7 @@ class ControllerWaiting extends Phaser.State {
 
     // display button to submit drawing
     let btn2 = document.createElement("button")
-    btn2.innerHTML = 'Submit drawing'
+    btn2.innerHTML = serverInfo.translate("submit-drawing")
     btn2.addEventListener('click', function(event) {
       let dataURI = bmdReference.canvas.toDataURL()
 
@@ -95,7 +95,7 @@ class ControllerWaiting extends Phaser.State {
       canvas.style.display = 'none';
 
       if(!serverInfo.vip) {
-        p3.innerHTML = 'Waiting for game to start ...';
+        p3.innerHTML = serverInfo.translate('controller-waiting-2')
       } else {
         p3.innerHTML = ''
       }

@@ -1,5 +1,3 @@
-import { WINDOW_WIDTH, WINDOW_HEIGHT } from './config'
-
 import Menu from './state/Menu' // menu is the waiting menu, where players either create or join a room
 
 import GameWaiting from './state/GameWaiting' // game merely *displays* the game on the monitor
@@ -22,6 +20,7 @@ import ControllerOver from './state/ControllerOver'
 class App extends Phaser.Game {
   constructor () {
     super('100%', '100%', Phaser.AUTO, 'canvas-container')
+    
     // menu state
     this.state.add('Menu', Menu)
  
