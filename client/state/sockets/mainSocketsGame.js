@@ -29,12 +29,6 @@ const loadMainSockets = (socket, gm, serverInfo) => {
     gm.state.start('Game' + data.nextState)
   })
 
-  // get a drawing from the server, which starts the next Guess-Pick-Result cycle
-  // we could turn it on/off at start/end of cycle, but this seems easier and cleaner
-  socket.on('return-drawing', data => {
-    serverInfo.drawing = data
-  })
-
   // presignals always have the following format ['variable name', value]
   // they always set a variable on the server info (before a state change)
   socket.on('pre-signal', data => {

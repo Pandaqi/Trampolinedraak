@@ -24,11 +24,6 @@ const loadMainSockets = (socket, gm, serverInfo) => {
     gm.state.start('Controller' + data.nextState)
   })
 
-  // save whose drawing is displayed on screen, so we know if this controller is the owner or not
-  socket.on('return-drawing', data => {
-    serverInfo.drawing = data
-  })
-
   // presignals always have the following format ['variable name', value]
   // they always set a variable on the server info (before a state change)
   socket.on('pre-signal', data => {
