@@ -361,8 +361,9 @@ io.on('connection', socket => {
 
   // When the game is ended/exited/destroyed
   socket.on('destroy-game', state => {
+    let room = socket.mainRoom
     // set our room to destroy mode (sounds exciting)
-    rooms[socket.mainRoom].destroyingGame = true
+    rooms[room].destroyingGame = true
 
     // disconnect everyone
     sendSignal(room, true, 'force-disconnect', {}, false, false)
